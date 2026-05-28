@@ -73,5 +73,8 @@ extern AppState g;  // Instance unique — toute la mémoire « vivante » du pr
 // Permet d'afficher VERT / ORANGE / ROUGE dans le moniteur série
 const char *stateName(ColorState s);
 
-// Permet de recalculer g.run.* depuis les #define de Config.h (appeler au boot)
+// Permet de recalculer g.run.* depuis les #define de Config.h — mode immédiat (appeler au boot)
 void configApply();
+
+// Permet de recalculer g.run.* depuis la section MODE LENT de Config.h
+void configApplyLent();

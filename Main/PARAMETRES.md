@@ -13,8 +13,12 @@
 
 ## Mode actif
 
-- **`MODE_ACTIF`** = `MODE_IMMEDIAT` dans `Config.h`
-- Implémentation : `ModeImmediat.cpp`
+Dans `Config.h` : **`MODE_ACTIF`**
+
+| Valeur | Fichier | Comportement |
+|--------|---------|--------------|
+| `MODE_IMMEDIAT` | `ModeImmediat.cpp` | VU réactif + flash bleu |
+| `MODE_LENT` | `ModeLent.cpp` | VU adouci, **pas de flash**, réglages `LENT_*` |
 
 ## Rappel du principe (mode immédiat)
 
@@ -22,10 +26,16 @@
 2. **Couleur** : selon la position sur le ruban (plages `ADC_FIN_ZONE_*`).
 3. **Flash bleu** : à la montée vert → orange → rouge (pas à la descente).
 
+## Mode lent (`LENT_*`)
+
+Utilisés seulement si `MODE_ACTIF == MODE_LENT` :  
+`LENT_ATTACK_PERCENT`, `LENT_DESCENT_DURATION_SEC`, `LENT_MAX_BRIGHTNESS`, `LENT_BOOT_BLUE_MS` (0 = pas de bleu au boot), etc.
+
 ## Sections Config.h
 
 | Section | Exemples |
 |---------|----------|
+| Mode | `MODE_ACTIF`, `MODE_IMMEDIAT`, `MODE_LENT` |
 | Bandeau | `LED_COUNT`, `MAX_BRIGHTNESS`, `LED_PIN` |
 | Micro | `SAMPLE_COUNT`, `PEAK_SMOOTH_PERCENT` |
 | Plages ADC | `ADC_FIN_ZONE_VERT`, `ADC_FIN_ZONE_ORANGE` |

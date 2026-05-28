@@ -8,18 +8,23 @@
 #include "Modes.h"
 #include "Config.h"
 #include "ModeImmediat.h"
+#include "ModeLent.h"
 
 void modesSetup() {
 #if MODE_ACTIF == MODE_IMMEDIAT
   modeImmediatSetup();
+#elif MODE_ACTIF == MODE_LENT
+  modeLentSetup();
 #else
-#error "MODE_ACTIF inconnu — definir MODE_IMMEDIAT dans Config.h"
+#error "MODE_ACTIF inconnu — utiliser MODE_IMMEDIAT ou MODE_LENT dans Config.h"
 #endif
 }
 
 void modesLoop() {
 #if MODE_ACTIF == MODE_IMMEDIAT
   modeImmediatLoop();
+#elif MODE_ACTIF == MODE_LENT
+  modeLentLoop();
 #else
 #error "MODE_ACTIF inconnu"
 #endif

@@ -52,19 +52,14 @@ enum ColorState : uint8_t {
  * Chaque mode = une façon différente de réagir au micro et d’animer le ruban.
  * Le mode actif est choisi dans Config.h avec MODE_ACTIF (pas ici).
  *
- * Aujourd’hui :
- *   BRUIT_MODE_IMMEDIAT → réaction directe + VU + flash bleu (ModeImmediat.cpp)
- *
- * Pour ajouter un mode plus tard :
- *   1. Ajouter une ligne ici (ex. BRUIT_MODE_LENT = 1)
- *   2. Créer ModeLent.cpp avec setup() et loop()
- *   3. Brancher dans Modes.cpp
- *   4. Définir MODE_ACTIF dans Config.h
+ * Modes disponibles :
+ *   BRUIT_MODE_IMMEDIAT → VU réactif + flash bleu (ModeImmediat.cpp)
+ *   BRUIT_MODE_LENT     → VU adouci, sans flash (ModeLent.cpp)
  */
 enum BruitLedMode : uint8_t {
-  BRUIT_MODE_IMMEDIAT = 0
-  // BRUIT_MODE_LENT   = 1,  // exemple futur : montée/descente plus lentes
-  // BRUIT_MODE_PULSE  = 2,  // exemple futur : pulsation sur le bruit
+  BRUIT_MODE_IMMEDIAT = 0,
+  BRUIT_MODE_LENT     = 1
+  // BRUIT_MODE_PULSE  = 2,  // futur : pulsation sur le bruit
 };
 
 // ═══════════════════════════════════════════════════════════════

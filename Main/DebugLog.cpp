@@ -36,6 +36,9 @@ void debugLogStatusIfDue(const MicSample &mic) {
   Serial.print(stateName(zonePlage));
   Serial.print(F(" etat="));
   Serial.print(stateName(g.currentState));
+#if MODE_ACTIF == MODE_LENT
+  Serial.println(F(" (mode lent — pas de flash bleu)"));
+#else
   if (cible > g.currentState) {
     Serial.print(F(" -> flash "));
     Serial.println(stateName(cible));
@@ -60,6 +63,7 @@ void debugLogStatusIfDue(const MicSample &mic) {
     Serial.print(FLASH_COUNT * 2);
     Serial.println(F(" <<<"));
   }
+#endif
   Serial.print(F("LED 0-"));
   Serial.print(g.ledFinZoneVert - 1);
   Serial.print(F("=VERT "));

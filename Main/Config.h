@@ -12,7 +12,8 @@
 //  MODE DE GESTION LED vs BRUIT
 // ═══════════════════════════════════════════════════════════════
 #define MODE_IMMEDIAT  0   // Identifiant mode immédiat (ne pas changer)
-#define MODE_ACTIF     MODE_IMMEDIAT  // Permet de choisir le comportement actif   value: [MODE_IMMEDIAT]
+#define MODE_LENT      1   // Identifiant mode lent (ne pas changer)
+#define MODE_ACTIF     MODE_IMMEDIAT  // Permet de choisir le comportement actif   value: [MODE_IMMEDIAT | MODE_LENT]
 
 // ═══════════════════════════════════════════════════════════════
 //  BANDEAU WS2812B
@@ -37,8 +38,8 @@
 // ═══════════════════════════════════════════════════════════════
 #define ADC_PLAGE_MIN       0     // Permet de fixer la borne basse utile du peak   value: [0 - 1022]
 #define ADC_PLAGE_MAX       1023  // Permet de fixer la borne haute utile du peak   value: [1 - 1023]
-#define ADC_FIN_ZONE_VERT   500   // Permet de délimiter la zone VERTE (peak ≤ cette valeur)   value: [0 - 1022]
-#define ADC_FIN_ZONE_ORANGE 800   // Permet de délimiter la zone ORANGE (peak ≤ cette valeur)   value: [ADC_FIN_ZONE_VERT+1 - 1023]
+#define ADC_FIN_ZONE_VERT   400   // Permet de délimiter la zone VERTE (peak ≤ cette valeur)   value: [0 - 1022]
+#define ADC_FIN_ZONE_ORANGE 700   // Permet de délimiter la zone ORANGE (peak ≤ cette valeur)   value: [ADC_FIN_ZONE_VERT+1 - 1023]
 #define ADC_HYST_VERT       80    // Permet d'éviter le rebond en redescendant depuis orange/rouge vers vert   value: [0 - 500]
 #define ADC_HYST_ORANGE     80    // Permet d'éviter le rebond en redescendant depuis rouge vers orange   value: [0 - 500]
 
@@ -71,7 +72,19 @@
 #define FLASH_OFF_MS            120 // Permet de régler la durée d'extinction entre deux impulsions (ms)   value: [20 - 2000]
 
 // ═══════════════════════════════════════════════════════════════
-//  BOOT (séquence au démarrage)
+//  MODE LENT — VU adouci, sans flash bleu (MODE_ACTIF == MODE_LENT)
+// ═══════════════════════════════════════════════════════════════
+#define LENT_ATTACK_PERCENT          12  // Permet de ralentir la montée de la barre   value: [0 - 100]
+#define LENT_AVG_SMOOTH_PERCENT      25  // Permet de stabiliser la moyenne (descente plus tardive)   value: [0 - 100]
+#define LENT_PEAK_SMOOTH_PERCENT     40  // Permet de lisser fortement les variations de peak   value: [0 - 100]
+#define LENT_DESCENT_DELAY_SEC       10  // Permet d'attendre plus longtemps avant la descente   value: [0 - 120]
+#define LENT_DESCENT_DURATION_SEC      120 // Permet de vider la barre lentement (ex. 120 ≈ 2 min)   value: [1 - 600]
+#define LENT_MAX_BRIGHTNESS          50  // Permet de limiter la luminosité en mode calme   value: [0 - 255]
+#define LENT_BOOT_BLUE_MS            0   // Permet d'afficher le bleu au boot ; 0 = désactivé   value: [0 - 10000]
+#define LENT_BOOT_VU_SPEED_PERCENT   20  // Permet de ralentir l'animation VU au boot   value: [5 - 100]
+
+// ═══════════════════════════════════════════════════════════════
+//  BOOT (séquence au démarrage) — mode immédiat
 // ═══════════════════════════════════════════════════════════════
 #define BOOT_BLUE_MS            800 // Permet d'afficher le ruban entièrement bleu juste après l'init (ms)   value: [0 - 10000]
 #define BOOT_VU_SPEED_PERCENT   75  // Permet de régler la vitesse de l'animation VU verte au boot (100=rapide)   value: [5 - 100]

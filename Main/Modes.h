@@ -9,7 +9,7 @@
  *   modesLoop()   →  à chaque tour (loop Arduino)
  *
  * Le mode réel est choisi dans Config.h (MODE_ACTIF).
- * Aujourd'hui seul MODE_IMMEDIAT est implémenté (ModeImmediat.cpp).
+ * Modes : MODE_IMMEDIAT (ModeImmediat.cpp), MODE_LENT (ModeLent.cpp).
  *
  * Ajouter un nouveau mode :
  *   1. BruitLedMode dans Types.h

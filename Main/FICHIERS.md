@@ -40,7 +40,8 @@
 
 | Fichier | Rôle | Modifier ? |
 |---------|------|------------|
-| **ModeImmediat.h / .cpp** | Comportement actuel (VU + flash) | Pour changer la logique du mode |
+| **ModeImmediat.h / .cpp** | Mode immédiat (VU + flash bleu) | Logique mode réactif |
+| **ModeLent.h / .cpp** | Mode lent (VU adouci, sans flash) | Logique mode calme |
 | **Modes.h / .cpp** | Appelle le mode choisi par `MODE_ACTIF` | Pour ajouter un nouveau mode |
 | **Main.ino** | `setup()` / `loop()` Arduino | Presque jamais |
 

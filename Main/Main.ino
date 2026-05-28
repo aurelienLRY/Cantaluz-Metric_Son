@@ -18,7 +18,8 @@
  *   MicSensor.*      → lecture micro + hauteur barre
  *   LedStrip.*       → ruban et couleurs par zone
  *   FlashEtat.*      → flashs bleus montée de palier
- *   ModeImmediat.*   → mode « immédiat » (actuel)
+ *   ModeImmediat.*   → mode « immédiat »
+ *   ModeLent.*       → mode « lent » (dòç)
  *   Modes.*          → choix du mode
  *   DebugLog.*       → traces série
  *
@@ -35,8 +36,14 @@ void setup() {
 #ifdef DEBUG_SERIAL
   Serial.begin(SERIAL_BAUD);
   delay(300);
-  Serial.println(F("=== VU MAX4466 + WS2812B ==="));
+  Serial.println(F("=== Cantaluz ==="));
+#if MODE_ACTIF == MODE_LENT
+  Serial.println(F("Mode: LENT (dòç)"));
+#elif MODE_ACTIF == MODE_IMMEDIAT
   Serial.println(F("Mode: IMMEDIAT"));
+#else
+  Serial.println(F("Mode: (inconnu)"));
+#endif
 #endif
 
   modesSetup();
