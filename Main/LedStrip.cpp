@@ -18,13 +18,13 @@ void ledComputeZonesFromPlages() {
   int plageTotale = ADC_PLAGE_MAX - ADC_PLAGE_MIN + 1;
   if (plageTotale < 1) plageTotale = 1;
 
-  int plageVert = ADC_FIN_ZONE_VERT - ADC_PLAGE_MIN + 1;
+  int plageVert = g.live.adcFinZoneVert - ADC_PLAGE_MIN + 1;
   if (plageVert < 0) plageVert = 0;
 
-  int plageOrange = ADC_FIN_ZONE_ORANGE - ADC_FIN_ZONE_VERT;
+  int plageOrange = g.live.adcFinZoneOrange - g.live.adcFinZoneVert;
   if (plageOrange < 0) plageOrange = 0;
 
-  int plageRouge = ADC_PLAGE_MAX - ADC_FIN_ZONE_ORANGE;
+  int plageRouge = ADC_PLAGE_MAX - g.live.adcFinZoneOrange;
   if (plageRouge < 0) plageRouge = 0;
 
   g.ledFinZoneVert = (LED_COUNT * (long)plageVert) / plageTotale;
@@ -34,17 +34,17 @@ void ledComputeZonesFromPlages() {
   if (g.ledFinZoneOrange <= g.ledFinZoneVert) g.ledFinZoneOrange = g.ledFinZoneVert + 1;
   if (g.ledFinZoneOrange >= LED_COUNT) g.ledFinZoneOrange = LED_COUNT - 1;
 
-  g.threshOrangeUp = ADC_FIN_ZONE_VERT + 1;
-  g.threshRedUp = ADC_FIN_ZONE_ORANGE + 1;
-  g.threshGreenDn = ADC_FIN_ZONE_VERT - ADC_HYST_VERT;
-  g.threshOrangeDn = ADC_FIN_ZONE_ORANGE - ADC_HYST_ORANGE;
+  g.threshOrangeUp = g.live.adcFinZoneVert + 1;
+  g.threshRedUp = g.live.adcFinZoneOrange + 1;
+  g.threshGreenDn = g.live.adcFinZoneVert - ADC_HYST_VERT;
+  g.threshOrangeDn = g.live.adcFinZoneOrange - ADC_HYST_ORANGE;
   if (g.threshGreenDn < ADC_PLAGE_MIN) g.threshGreenDn = ADC_PLAGE_MIN;
   if (g.threshOrangeDn <= g.threshGreenDn) g.threshOrangeDn = g.threshGreenDn + 1;
 }
 
 ColorState ledZoneDepuisPeak(int peak) {
-  if (peak <= ADC_FIN_ZONE_VERT) return STATE_GREEN;
-  if (peak <= ADC_FIN_ZONE_ORANGE) return STATE_ORANGE;
+  if (peak <= g.live.adcFinZoneVert) return STATE_GREEN;
+  if (peak <= g.live.adcFinZoneOrange) return STATE_ORANGE;
   return STATE_RED;
 }
 
@@ -83,21 +83,27 @@ void ledRenderVuMeter(float level) {
     g.leds[i] = (i < litCount) ? ledCouleurPourIndex(i) : CRGB::Black;
   }
   FastLED.show();
+  yield();
 }
 
 void ledFillStrip(CRGB color) {
   fill_solid(g.leds, LED_COUNT, color);
   FastLED.show();
+  yield();
 }
 
 void ledAfficherBleuComplet(uint16_t dureeMs) {
   ledFillStrip(CRGB::Blue);
-  delay(dureeMs);
+  for (uint16_t t = 0; t < dureeMs; t += 50) {
+    delay(50);
+    yield();
+    ESP.wdtFeed();
+  }
 }
 
 void ledInitHardware() {
   FastLED.addLeds<WS2812, LED_PIN, GRB>(g.leds, LED_COUNT);
-  FastLED.setBrightness(MAX_BRIGHTNESS);
+  FastLED.setBrightness(g.live.maxBrightness);
   FastLED.clear(true);
 }
 
@@ -105,10 +111,14 @@ void ledRunBootSequence() {
   for (float l = 0.0f; l <= 1.0f; l += 0.04f) {
     ledRenderVuMeter(l);
     delay(g.run.bootStepMs);
+    yield();
+    ESP.wdtFeed();
   }
   for (float l = 1.0f; l >= (float)MIN_LEDS_ON / (float)LED_COUNT; l -= 0.012f) {
     ledRenderVuMeter(l);
     delay(g.run.bootStepMs + 4);
+    yield();
+    ESP.wdtFeed();
   }
 
   g.displayLevel = (float)MIN_LEDS_ON / (float)LED_COUNT;

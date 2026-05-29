@@ -13,6 +13,24 @@
 
 AppState g;
 
+void liveConfigInit() {
+#if MODE_ACTIF == MODE_LENT
+  g.live.maxBrightness = LENT_MAX_BRIGHTNESS;
+  g.live.attackPercent = LENT_ATTACK_PERCENT;
+#else
+  g.live.maxBrightness = MAX_BRIGHTNESS;
+  g.live.attackPercent = ATTACK_PERCENT;
+#endif
+  g.live.adcFinZoneVert = ADC_FIN_ZONE_VERT;
+  g.live.adcFinZoneOrange = ADC_FIN_ZONE_ORANGE;
+  g.lastPeak = 0;
+  g.lastMicAvg = 0;
+}
+
+void liveApplyAttackRate() {
+  g.run.attackRate = pctVersFraction(g.live.attackPercent);
+}
+
 const char *stateName(ColorState s) {
   switch (s) {
     case STATE_GREEN:  return "VERT";
@@ -23,7 +41,7 @@ const char *stateName(ColorState s) {
 }
 
 void configApply() {
-  g.run.attackRate = pctVersFraction(ATTACK_PERCENT);
+  g.run.attackRate = pctVersFraction(g.live.attackPercent);
   g.run.avgSmooth = pctVersFraction(AVG_SMOOTH_PERCENT);
   g.run.peakSmoothFactor = pctVersFraction(PEAK_SMOOTH_PERCENT);
   g.run.descentDelayMs = secVersMs(DESCENT_DELAY_SEC);
@@ -33,7 +51,7 @@ void configApply() {
 }
 
 void configApplyLent() {
-  g.run.attackRate = pctVersFraction(LENT_ATTACK_PERCENT);
+  g.run.attackRate = pctVersFraction(g.live.attackPercent);
   g.run.avgSmooth = pctVersFraction(LENT_AVG_SMOOTH_PERCENT);
   g.run.peakSmoothFactor = pctVersFraction(LENT_PEAK_SMOOTH_PERCENT);
   g.run.descentDelayMs = secVersMs(LENT_DESCENT_DELAY_SEC);

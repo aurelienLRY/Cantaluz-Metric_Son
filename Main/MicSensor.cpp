@@ -22,6 +22,9 @@ void micSample(MicSample &out) {
     if (v < out.minVal) out.minVal = v;
     if (v > out.maxVal) out.maxVal = v;
     delayMicroseconds(SAMPLE_DELAY_US);
+    if ((i & 15) == 15) {
+      yield();
+    }
   }
 
   out.avg = (int)(sum / SAMPLE_COUNT);
@@ -88,6 +91,8 @@ void micCalibrateVuMax() {
     if (m.peak > ambientMax) ambientMax = m.peak;
     ledRenderVuMeter((float)MIN_LEDS_ON / (float)LED_COUNT);
     delay(15);
+    yield();
+    ESP.wdtFeed();
   }
 
   if (ambientMax < 8) ambientMax = 40;

@@ -35,6 +35,7 @@
 | **LedStrip.h / .cpp** | Ruban, zones couleur, boot visuel | BANDEAU, PLAGES ADC, BOOT |
 | **FlashEtat.h / .cpp** | Flashs bleus, paliers montée/descente | FLASH BLEU, PLAGES ADC |
 | **DebugLog.h / .cpp** | Moniteur série 115200 | DEBUG SÉRIE |
+| **WifiPortal.h / .cpp** | SoftAP + page web téléphone | WIFI dans Config.h |
 
 ### Modes
 

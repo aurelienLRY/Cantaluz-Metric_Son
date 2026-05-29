@@ -7,10 +7,14 @@
 
 #include "Modes.h"
 #include "Config.h"
+#include "AppState.h"
 #include "ModeImmediat.h"
 #include "ModeLent.h"
+#include "WifiPortal.h"
 
 void modesSetup() {
+  liveConfigInit();
+
 #if MODE_ACTIF == MODE_IMMEDIAT
   modeImmediatSetup();
 #elif MODE_ACTIF == MODE_LENT
@@ -21,6 +25,8 @@ void modesSetup() {
 }
 
 void modesLoop() {
+  wifiPortalLoop();
+
 #if MODE_ACTIF == MODE_IMMEDIAT
   modeImmediatLoop();
 #elif MODE_ACTIF == MODE_LENT

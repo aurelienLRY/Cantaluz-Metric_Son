@@ -10,11 +10,12 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
 
 | | |
 |---|---|
-| **Carte** | WeMos D1 mini / ESP8266 |
+| **Carte** | WeMos D1 R1 / R2 / mini (ESP8266) |
 | **Micro** | MAX4466 (GY) sur **A0** |
 | **LED** | Ruban WS2812B sur **D2** (GPIO4) |
 | **Mode actuel** | Immédiat — VU réactif + zones couleur + flash bleu |
-| **Réglages** | `Main/Config.h` |
+| **Réglages** | `Main/Config.h` (+ page web si Wi-Fi actif) |
+| **Wi-Fi** | Point d'accès `Cantaluz` → `http://192.168.4.1` |
 
 ```
 [DIN]  ████████░░░░░░░░░░░░░░░░░░░░░░  → fin du ruban
@@ -27,7 +28,7 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
 
 ## Matériel
 
-- WeMos D1 R2 & mini (ou ESP8266 équivalent, CH340G)
+- WeMos **D1 R1**, D1 R2 ou D1 mini (ESP8266, pilote CH340G ou CP2102)
 - Module micro **MAX4466** → broche **A0**
 - Ruban **WS2812B** 5 V (ex. 60 LED/m × 5 m = 300 LED)
   - Données : **D2** + résistance **470 Ω** en série
@@ -43,10 +44,44 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
 
 1. Cloner le dépôt et ouvrir le dossier **`Main`** dans l’IDE Arduino (sketch `Main.ino`).
 2. Installer **FastLED** (Gestionnaire de bibliothèques).
-3. Carte : **LOLIN(WEMOS) D1 R2 & mini** (ou Generic ESP8266).
-4. Ajuster `Config.h` (nombre de LED, seuils, luminosité).
-5. Téléverser **`Main.ino`**.
-6. (Optionnel) Moniteur série **115200** baud si `DEBUG_SERIAL` est actif.
+3. Carte dans l’IDE : **LOLIN(WEMOS) D1 R1** (votre carte) — *ne pas* utiliser « Generic ESP8266 ».
+4. Menu **Outils** (avec D1 R1 sélectionnée) :
+
+   | Option | Valeur recommandée |
+   |--------|-------------------|
+   | Flash Size | **4MB (FS:2MB OTA:~1019KB)** |
+   | CPU Frequency | 80 MHz |
+   | Upload Speed | 921600 (ou **115200** si erreur) |
+   | Erase Flash | **All Flash Contents** (1× après changement de carte) |
+   | Port | COM de votre câble USB |
+
+5. Ajuster `Config.h` (nombre de LED, seuils, luminosité).
+6. Téléverser **`Main.ino`** (moniteur série **fermé** pendant l’upload).
+7. (Optionnel) Moniteur série **115200** baud si `DEBUG_SERIAL` est actif.
+8. **Téléphone** — si `WIFI_ENABLE` est à `1` dans `Config.h` :
+   - Se connecter au Wi-Fi **`Cantaluz`** (mot de passe par défaut : `cantaluz1`, modifiable dans `Config.h`).
+   - Ouvrir **`http://192.168.4.1`** dans le navigateur.
+   - Voir le niveau sonore en direct et ajuster luminosité, zones vert/orange et montée de la barre.
+
+### Test Wi-Fi matériel (si aucun réseau visible)
+
+1. Ouvrir le dossier **`WifiMinimal`** dans l’IDE Arduino (pas `Main`).
+2. Carte : **LOLIN(WEMOS) D1 R1** (la vôtre).
+3. **Outils → Effacer la flash : All Flash Contents** (une fois), puis téléverser.
+4. Chercher le réseau **`Cantaluz_TEST`** (mot de passe `12345678`).
+5. Si **Cantaluz_TEST** n’apparaît pas → problème carte / alim / pilote CH340 / mauvaise carte sélectionnée (pas ESP32).
+6. Si **Cantaluz_TEST** apparaît mais pas **Cantaluz** → retéléverser `Main` ; mettre `LED_COUNT` à **17** pour tester (ruban 5 m = beaucoup de RAM).
+
+### Wi-Fi invisible sur le téléphone ?
+
+1. **Carte dans l’IDE** : **LOLIN(WEMOS) D1 R2 & mini** (ESP8266, pas ESP32).
+2. **Moniteur série 115200** après téléversement : doit afficher `SoftAP: OK` et `IP: http://192.168.4.1`. Si `ECHEC`, vérifier `WIFI_AP_PASS` (8 caractères minimum) ou laisser vide pour un réseau ouvert.
+3. **Android / iPhone** : désactiver *« Passer automatiquement aux données mobiles »* / *« Réseau sans Internet »* — le téléphone cache souvent les AP sans Internet ([voir aussi Random Nerd Tutorials](https://randomnerdtutorials.com/esp8266-nodemcu-access-point-ap-web-server/)).
+4. Tester la liste Wi-Fi sur un **PC portable** : le réseau `Cantaluz` y apparaît souvent avant le téléphone.
+5. Changer **`WIFI_AP_CHANNEL`** dans `Config.h` (essayer `1` ou `11`).
+6. Alimentation **USB correcte** (câble données, pas seulement charge) — le Wi-Fi consomme plus au démarrage.
+
+Référence officielle ESP8266 : [exemple SoftAP](https://github.com/esp8266/Arduino/blob/master/libraries/ESP8266WiFi/examples/WiFiAccessPoint/WiFiAccessPoint.ino).
 
 ---
 
