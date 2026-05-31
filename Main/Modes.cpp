@@ -1,31 +1,49 @@
 /*
- * Modes.cpp — Dispatch vers le mode défini par MODE_ACTIF (Config.h)
- *
- * Si compilation échoue avec « MODE_ACTIF inconnu » :
- *   vérifier que MODE_ACTIF vaut MODE_IMMEDIAT dans Config.h
+ * Modes.cpp — Dispatch vers le mode actif (Config.h au boot, app web ensuite)
  */
 
 #include "Modes.h"
 #include "Config.h"
+#include "AppState.h"
 #include "ModeImmediat.h"
 #include "ModeLent.h"
+#include "LedStrip.h"
+#include "WifiPortal.h"
+
+void modesSetActive(uint8_t mode) {
+  if (mode != MODE_IMMEDIAT && mode != MODE_LENT) {
+    return;
+  }
+  g.live.activeMode = mode;
+  g.transitionActive = false;
+  g.currentState = STATE_GREEN;
+
+  if (mode == MODE_LENT) {
+    configApplyLent();
+  } else {
+    configApply();
+  }
+  liveApplyAttackRate();
+  ledComputeZonesFromPlages();
+}
 
 void modesSetup() {
-#if MODE_ACTIF == MODE_IMMEDIAT
-  modeImmediatSetup();
-#elif MODE_ACTIF == MODE_LENT
-  modeLentSetup();
-#else
-#error "MODE_ACTIF inconnu — utiliser MODE_IMMEDIAT ou MODE_LENT dans Config.h"
-#endif
+  liveConfigInit();
+  modesSetActive(g.live.activeMode);
+
+  if (g.live.activeMode == MODE_LENT) {
+    modeLentSetup();
+  } else {
+    modeImmediatSetup();
+  }
 }
 
 void modesLoop() {
-#if MODE_ACTIF == MODE_IMMEDIAT
-  modeImmediatLoop();
-#elif MODE_ACTIF == MODE_LENT
-  modeLentLoop();
-#else
-#error "MODE_ACTIF inconnu"
-#endif
+  wifiPortalLoop();
+
+  if (g.live.activeMode == MODE_LENT) {
+    modeLentLoop();
+  } else {
+    modeImmediatLoop();
+  }
 }

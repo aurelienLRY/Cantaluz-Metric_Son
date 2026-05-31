@@ -18,7 +18,7 @@
 // ═══════════════════════════════════════════════════════════════
 //  BANDEAU WS2812B
 // ═══════════════════════════════════════════════════════════════
-#define LEDS_PER_METER    60    // Permet de définir la densité LED par mètre du ruban   value: [1 - 144]
+#define LEDS_PER_METER   60    // Permet de définir la densité LED par mètre du ruban   value: [1 - 144]
 #define STRIP_LENGTH_M    5     // Permet de calculer LED_COUNT = densité × longueur (m)   value: [1 - 10]
 #define LED_COUNT         (LEDS_PER_METER * STRIP_LENGTH_M)  // Nombre total LED ; ruban test : remplacer par 17   value: [1 - 600]
 #define LED_PIN           4     // Permet de brancher les données sur ce GPIO (D2 = 4 sur WeMos D1)   value: [0 - 16]
@@ -28,7 +28,7 @@
 //  MICRO MAX4466 (entrée A0, peak typique 0-1023)
 // ═══════════════════════════════════════════════════════════════
 #define MIC_PIN             A0  // Permet de lire le micro sur la broche analogique   value: [A0]
-#define SAMPLE_COUNT        64  // Permet de lisser le peak sur N lectures par boucle   value: [8 - 256]
+#define SAMPLE_COUNT        24  // Permet de lisser le peak (24 si Wi-Fi, 64 sans Wi-Fi)   value: [8 - 256]
 #define SAMPLE_DELAY_US     200 // Permet d'espacer chaque lecture analogique (µs)   value: [50 - 1000]
 #define PEAK_SMOOTH_PERCENT 15  // Permet de lisser le peak pour les flashs (évite micro-coupures)   value: [0 - 100]
 
@@ -90,8 +90,23 @@
 #define BOOT_VU_SPEED_PERCENT   75  // Permet de régler la vitesse de l'animation VU verte au boot (100=rapide)   value: [5 - 100]
 
 // ═══════════════════════════════════════════════════════════════
-//  DEBUG SÉRIE (moniteur Arduino)
+//  WIFI — point d'accès pour le téléphone (ESP8266 intégré)
 // ═══════════════════════════════════════════════════════════════
-#define DEBUG_SERIAL                  // Permet d'activer les logs ; commenter la ligne pour désactiver
+#define WIFI_ENABLE           1       // Permet d'activer le réseau Cantaluz (1=oui, 0=non)   value: [0 - 1]
+#define WIFI_OPEN_NETWORK     0       // 0 = WPA (comme Cantaluz_TEST) ; 1 = réseau ouvert   value: [0 - 1]
+#define WIFI_AP_SSID          "Cantaluz"  // Nom du réseau Wi-Fi créé par la carte (max 31 car.)
+#define WIFI_AP_PASS          "cantaluz1" // Mot de passe WPA (8 car. min.)
+#define WIFI_AP_CHANNEL       6       // Canal Wi-Fi 1-13 (essayer 6 ou 11 si invisible)   value: [1 - 13]
+#define WIFI_HTTP_PORT        80      // Port de la page web   value: [80 - 8080]
+#define WIFI_MDNS_NAME        "cantaluz"  // Nom local : http://cantaluz.local (mDNS)
+#define WIFI_CAPTIVE_PORTAL   1       // 1 = ouvre la page auto à la connexion Wi-Fi   value: [0 - 1]
+
+// ═══════════════════════════════════════════════════════════════
+//  DEBUG SÉRIE (moniteur série)
+//  ATTENTION : avec Wi-Fi actif, le debug bloque la radio ESP8266.
+//  Garder DEBUG_SERIAL commenté en usage normal (téléphone).
+// ═══════════════════════════════════════════════════════════════
+#define DEBUG_SERIAL                  // Décommenter seulement pour diagnostiquer sans Wi-Fi
 #define SERIAL_BAUD             115200 // Permet de régler la vitesse du port série   value: [9600 - 921600]
-#define DEBUG_INTERVAL_MS       400   // Permet d'espacer les lignes de debug (ms)   value: [100 - 10000]
+#define DEBUG_INTERVAL_MS       5000  // Si debug actif : intervalle long pour ne pas couper le Wi-Fi   value: [1000 - 30000]
+#define LOOP_MIN_PERIOD_MS      25    // Pause min. entre 2 boucles (laisse respirer le Wi-Fi)   value: [10 - 100]

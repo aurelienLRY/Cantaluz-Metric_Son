@@ -10,11 +10,12 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
 
 | | |
 |---|---|
-| **Carte** | WeMos D1 mini / ESP8266 |
+| **Carte** | WeMos D1 R1 / R2 / mini (ESP8266) |
 | **Micro** | MAX4466 (GY) sur **A0** |
 | **LED** | Ruban WS2812B sur **D2** (GPIO4) |
-| **Mode actuel** | Immédiat — VU réactif + zones couleur + flash bleu |
-| **Réglages** | `Main/Config.h` |
+| **Modes** | **Flash** (pics → flashs bleus) ou **Standard** (vu-mètre fluide, sans flash) — commutable depuis l’app |
+| **Réglages** | `Main/Config.h` au boot ; seuils et luminosité aussi via l’app web (jusqu’au redémarrage) |
+| **Wi-Fi** | `Cantaluz` / `cantaluz1` → `http://cantaluz.local` ou `192.168.4.1` (portail captif) |
 
 ```
 [DIN]  ████████░░░░░░░░░░░░░░░░░░░░░░  → fin du ruban
@@ -27,7 +28,7 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
 
 ## Matériel
 
-- WeMos D1 R2 & mini (ou ESP8266 équivalent, CH340G)
+- WeMos **D1 R1**, D1 R2 ou D1 mini (ESP8266, pilote CH340G ou CP2102)
 - Module micro **MAX4466** → broche **A0**
 - Ruban **WS2812B** 5 V (ex. 60 LED/m × 5 m = 300 LED)
   - Données : **D2** + résistance **470 Ω** en série
@@ -43,10 +44,48 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
 
 1. Cloner le dépôt et ouvrir le dossier **`Main`** dans l’IDE Arduino (sketch `Main.ino`).
 2. Installer **FastLED** (Gestionnaire de bibliothèques).
-3. Carte : **LOLIN(WEMOS) D1 R2 & mini** (ou Generic ESP8266).
-4. Ajuster `Config.h` (nombre de LED, seuils, luminosité).
-5. Téléverser **`Main.ino`**.
-6. (Optionnel) Moniteur série **115200** baud si `DEBUG_SERIAL` est actif.
+3. Carte dans l’IDE : **LOLIN(WEMOS) D1 R1** (votre carte) — *ne pas* utiliser « Generic ESP8266 ».
+4. Menu **Outils** (avec D1 R1 sélectionnée) :
+
+   | Option | Valeur recommandée |
+   |--------|-------------------|
+   | Flash Size | **4MB (FS:2MB OTA:~1019KB)** |
+   | CPU Frequency | 80 MHz |
+   | Upload Speed | 921600 (ou **115200** si erreur) |
+   | Erase Flash | **All Flash Contents** (1× après changement de carte) |
+   | Port | COM de votre câble USB |
+
+5. Ajuster `Config.h` (nombre de LED, seuils, luminosité).
+6. Téléverser **`Main.ino`** (moniteur série **fermé** pendant l’upload).
+7. (Optionnel) Moniteur série **115200** baud si `DEBUG_SERIAL` est actif.
+8. **Téléphone** — si `WIFI_ENABLE` est à `1` dans `Config.h` :
+   - Se connecter au Wi-Fi **`Cantaluz`** (mot de passe : `cantaluz1`).
+   - L’**app** s’ouvre via le portail captif, ou ouvrir **Chrome** sur `http://cantaluz.local` / `192.168.4.1`.
+   - Slogan : *« Outil d’accompagnement au calme. »*
+   - **Dashboard** : graphique d’ambiance (30 s), barre VU, choix du mode **Flash** ou **Standard**.
+   - **Réglages** : zone calme, zone animée, luminosité, montée de la barre ; bouton **↺** = valeur par défaut (`Config.h`) ; **i** = bulle d’aide.
+   - Les réglages web s’appliquent tout de suite sur le ruban ; au **redémarrage** de la carte, c’est `Config.h` qui reprend la main.
+   - **Ne pas** laisser le moniteur série ouvert en usage normal (sature l’ESP8266).
+
+### Test Wi-Fi matériel (si aucun réseau visible)
+
+1. Ouvrir le dossier **`WifiMinimal`** dans l’IDE Arduino (pas `Main`).
+2. Carte : **LOLIN(WEMOS) D1 R1** (la vôtre).
+3. **Outils → Effacer la flash : All Flash Contents** (une fois), puis téléverser.
+4. Chercher le réseau **`Cantaluz_TEST`** (mot de passe `12345678`).
+5. Si **Cantaluz_TEST** n’apparaît pas → problème carte / alim / pilote CH340 / mauvaise carte sélectionnée (pas ESP32).
+6. Si **Cantaluz_TEST** apparaît mais pas **Cantaluz** → retéléverser `Main` ; mettre `LED_COUNT` à **17** pour tester (ruban 5 m = beaucoup de RAM).
+
+### Wi-Fi invisible sur le téléphone ?
+
+1. **Carte dans l’IDE** : **LOLIN(WEMOS) D1 R2 & mini** (ESP8266, pas ESP32).
+2. **Moniteur série 115200** après téléversement : doit afficher `SoftAP: OK` et `IP: http://192.168.4.1`. Si `ECHEC`, vérifier `WIFI_AP_PASS` (8 caractères minimum) ou laisser vide pour un réseau ouvert.
+3. **Android / iPhone** : désactiver *« Passer automatiquement aux données mobiles »* / *« Réseau sans Internet »* — le téléphone cache souvent les AP sans Internet ([voir aussi Random Nerd Tutorials](https://randomnerdtutorials.com/esp8266-nodemcu-access-point-ap-web-server/)).
+4. Tester la liste Wi-Fi sur un **PC portable** : le réseau `Cantaluz` y apparaît souvent avant le téléphone.
+5. Changer **`WIFI_AP_CHANNEL`** dans `Config.h` (essayer `1` ou `11`).
+6. Alimentation **USB correcte** (câble données, pas seulement charge) — le Wi-Fi consomme plus au démarrage.
+
+Référence officielle ESP8266 : [exemple SoftAP](https://github.com/esp8266/Arduino/blob/master/libraries/ESP8266WiFi/examples/WiFiAccessPoint/WiFiAccessPoint.ino).
 
 ---
 
@@ -60,8 +99,8 @@ Tous les paramètres utilisateur sont dans **`Main/Config.h`**, documentés ains
 
 | Document | Contenu |
 |----------|---------|
-| [PARAMETRES.md](PARAMETRES.md) | Rappel des sections et du mode immédiat |
-| [FICHIERS.md](FICHIERS.md) | Architecture du code, flux boot / boucle |
+| [Main/PARAMETRES.md](Main/PARAMETRES.md) | Modes Flash/Standard, app web, sections `Config.h` |
+| [Main/FICHIERS.md](Main/FICHIERS.md) | Architecture du code, flux boot / boucle / API |
 
 **Ne pas modifier** le code des modules pour un simple réglage : tout passe par `Config.h`.
 
@@ -72,27 +111,37 @@ Tous les paramètres utilisateur sont dans **`Main/Config.h`**, documentés ains
 ```
 Cantaluz/
 └── Main/                     ← dossier sketch Arduino (nom = Main.ino)
-    ├── README.md             ← ce fichier
     ├── Main.ino              ← point d'entrée (setup / loop)
-    ├── Config.h              ← réglages
-    ├── Types.h
-    ├── ModeImmediat.*        ← comportement actuel
+    ├── Config.h              ← réglages par défaut (boot)
+    ├── AppState.*            ← état global + LiveConfig (web)
+    ├── Modes.*               ← dispatch Flash / Standard
+    ├── ModeImmediat.*        ← mode Flash (VU + flash bleu)
+    ├── ModeLent.*            ← mode Standard (VU adouci)
     ├── MicSensor.*           ← micro + barre VU
     ├── LedStrip.*            ← ruban WS2812B
-    ├── FlashEtat.*           ← flashs bleus
+    ├── FlashEtat.*           ← flashs bleus (mode Flash)
+    ├── WifiPortal.*          ← SoftAP, API, portail captif
+    ├── WebAppHtml.h          ← interface mobile (Dashboard / Réglages)
     └── …
+WifiMinimal/                  ← test Wi-Fi matériel seul (Cantaluz_TEST)
 ```
 
 ---
 
-## Comportement (mode immédiat)
+## Comportement des modes
+
+| App (nom affiché) | Firmware | Comportement |
+|-------------------|----------|--------------|
+| **Flash** | `MODE_IMMEDIAT` | VU réactif ; montée vert → orange → rouge → **flashs bleus** |
+| **Standard** | `MODE_LENT` | Vu-mètre fluide selon l’ambiance ; **pas de flash** ; paramètres `LENT_*` |
+
+Commun aux deux modes :
 
 1. **Boot** — ruban bleu, animation VU verte, calibration du silence.
-2. **En fonctionnement** — la barre monte vite avec le son ; elle redescend après quelques secondes sous la moyenne.
-3. **Paliers** — passage vert → orange → rouge déclenche des **flashs bleus** (un cran à la fois, pas à la descente).
-4. **Couleurs sur le ruban** — réparties selon les plages ADC (`ADC_FIN_ZONE_VERT`, `ADC_FIN_ZONE_ORANGE`), pas selon le volume instantané de chaque LED.
+2. **Barre VU** — hauteur selon le volume ; descente après quelques secondes sous la moyenne.
+3. **Couleurs sur le ruban** — réparties selon les plages ADC (`ADC_FIN_ZONE_VERT`, `ADC_FIN_ZONE_ORANGE`).
 
-D’autres modes « LED vs bruit » pourront être ajoutés via `Modes.cpp` et `MODE_ACTIF` dans `Config.h`.
+Le mode au **démarrage** est `MODE_ACTIF` dans `Config.h` ; l’app web peut le changer à chaud via `Modes.cpp`. D’autres comportements pourront être ajoutés de la même façon.
 
 ---
 

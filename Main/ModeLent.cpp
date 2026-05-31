@@ -28,7 +28,6 @@ void modeLentSetup() {
 #endif
 
   ledInitHardware();
-  FastLED.setBrightness(LENT_MAX_BRIGHTNESS);
 
 #if LENT_BOOT_BLUE_MS > 0
   ledAfficherBleuComplet(LENT_BOOT_BLUE_MS);
@@ -65,13 +64,22 @@ void modeLentSetup() {
 }
 
 void modeLentLoop() {
+  static unsigned long s_lastFrameMs = 0;
   unsigned long now = millis();
+  if (now - s_lastFrameMs < (unsigned long)LOOP_MIN_PERIOD_MS) {
+    yield();
+    return;
+  }
+  s_lastFrameMs = now;
+
   float dtSec = (now - g.lastLoopMs) / 1000.0f;
   if (dtSec <= 0.0f) dtSec = 0.001f;
   g.lastLoopMs = now;
 
   MicSample mic;
   micSample(mic);
+  g.lastPeak = mic.peak;
+  g.lastMicAvg = mic.avg;
   micUpdatePeakSmooth(mic.peak);
   micUpdateDisplayLevel(mic.peak, dtSec);
 

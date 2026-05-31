@@ -22,6 +22,15 @@
 #include "Config.h"
 #include "Types.h"
 
+// Réglages modifiables en live (Config.h au boot, puis page web /api/settings)
+struct LiveConfig {
+  uint8_t activeMode;     // MODE_IMMEDIAT ou MODE_LENT (modifiable via l'app web)
+  int adcFinZoneVert;     // Seuil fin zone verte (peak ADC)
+  int adcFinZoneOrange;   // Seuil fin zone orange (peak ADC)
+  uint8_t maxBrightness;  // Luminosité ruban 0-255
+  uint8_t attackPercent;  // Vitesse montée barre VU (%)
+};
+
 // Valeurs calculées depuis Config.h (% et secondes) — remplies par configApply()
 struct RuntimeConfig {
   float attackRate;              // Vitesse montée barre (ex. 0.45 si ATTACK_PERCENT=45)
@@ -37,7 +46,11 @@ struct RuntimeConfig {
 struct AppState {
   CRGB leds[LED_COUNT];          // Couleurs de chaque LED (buffer FastLED)
 
+  LiveConfig live;               // Réglages temps réel (web + Config.h au démarrage)
   RuntimeConfig run;             // Paramètres convertis (voir ci-dessus)
+
+  int lastPeak;                  // Dernier peak micro (pour API web)
+  int lastMicAvg;                // Dernière moyenne micro (pour API web)
 
   int ledFinZoneVert;            // Index LED : dernière LED de la zone verte
   int ledFinZoneOrange;          // Index LED : dernière LED de la zone orange
@@ -73,8 +86,20 @@ extern AppState g;  // Instance unique — toute la mémoire « vivante » du pr
 // Permet d'afficher VERT / ORANGE / ROUGE dans le moniteur série
 const char *stateName(ColorState s);
 
+// Permet de remplir g.live depuis Config.h selon MODE_ACTIF (appeler avant init LED)
+void liveConfigInit();
+
 // Permet de recalculer g.run.* depuis les #define de Config.h — mode immédiat (appeler au boot)
 void configApply();
 
 // Permet de recalculer g.run.* depuis la section MODE LENT de Config.h
 void configApplyLent();
+
+// Permet d'appliquer attackPercent → g.run.attackRate après changement web
+void liveApplyAttackRate();
+
+// Permet de restaurer tous les réglages par défaut (Config.h, garde le mode actuel)
+void liveConfigResetDefaults();
+
+// Permet de restaurer un seul réglage : "vert", "orange", "bright", "attack"
+void liveResetField(const char *field);

@@ -10,8 +10,73 @@
 #include "AppState.h"
 #include "Convert.h"
 #include "Config.h"
+#include <string.h>
 
 AppState g;
+
+void liveConfigInit() {
+  g.live.activeMode = MODE_ACTIF;
+#if MODE_ACTIF == MODE_LENT
+  g.live.maxBrightness = LENT_MAX_BRIGHTNESS;
+  g.live.attackPercent = LENT_ATTACK_PERCENT;
+#else
+  g.live.maxBrightness = MAX_BRIGHTNESS;
+  g.live.attackPercent = ATTACK_PERCENT;
+#endif
+  g.live.adcFinZoneVert = ADC_FIN_ZONE_VERT;
+  g.live.adcFinZoneOrange = ADC_FIN_ZONE_ORANGE;
+  g.lastPeak = 0;
+  g.lastMicAvg = 0;
+}
+
+void liveApplyAttackRate() {
+  g.run.attackRate = pctVersFraction(g.live.attackPercent);
+}
+
+static void liveLoadBrightnessAttackForMode() {
+  if (g.live.activeMode == MODE_LENT) {
+    g.live.maxBrightness = LENT_MAX_BRIGHTNESS;
+    g.live.attackPercent = LENT_ATTACK_PERCENT;
+  } else {
+    g.live.maxBrightness = MAX_BRIGHTNESS;
+    g.live.attackPercent = ATTACK_PERCENT;
+  }
+}
+
+void liveConfigResetDefaults() {
+  uint8_t prevMode = g.live.activeMode;
+  g.live.adcFinZoneVert = ADC_FIN_ZONE_VERT;
+  g.live.adcFinZoneOrange = ADC_FIN_ZONE_ORANGE;
+  liveLoadBrightnessAttackForMode();
+  g.live.activeMode = prevMode;
+  if (prevMode == MODE_LENT) {
+    configApplyLent();
+  } else {
+    configApply();
+  }
+  liveApplyAttackRate();
+}
+
+void liveResetField(const char *field) {
+  if (!field || !field[0]) {
+    return;
+  }
+  if (strcmp(field, "vert") == 0) {
+    g.live.adcFinZoneVert = ADC_FIN_ZONE_VERT;
+  } else if (strcmp(field, "orange") == 0) {
+    g.live.adcFinZoneOrange = ADC_FIN_ZONE_ORANGE;
+  } else if (strcmp(field, "bright") == 0) {
+    g.live.maxBrightness = (g.live.activeMode == MODE_LENT)
+      ? LENT_MAX_BRIGHTNESS : MAX_BRIGHTNESS;
+  } else if (strcmp(field, "attack") == 0) {
+    g.live.attackPercent = (g.live.activeMode == MODE_LENT)
+      ? LENT_ATTACK_PERCENT : ATTACK_PERCENT;
+    liveApplyAttackRate();
+  }
+  if (g.live.adcFinZoneOrange <= g.live.adcFinZoneVert) {
+    g.live.adcFinZoneOrange = g.live.adcFinZoneVert + 1;
+  }
+}
 
 const char *stateName(ColorState s) {
   switch (s) {
@@ -23,7 +88,7 @@ const char *stateName(ColorState s) {
 }
 
 void configApply() {
-  g.run.attackRate = pctVersFraction(ATTACK_PERCENT);
+  g.run.attackRate = pctVersFraction(g.live.attackPercent);
   g.run.avgSmooth = pctVersFraction(AVG_SMOOTH_PERCENT);
   g.run.peakSmoothFactor = pctVersFraction(PEAK_SMOOTH_PERCENT);
   g.run.descentDelayMs = secVersMs(DESCENT_DELAY_SEC);
@@ -33,7 +98,7 @@ void configApply() {
 }
 
 void configApplyLent() {
-  g.run.attackRate = pctVersFraction(LENT_ATTACK_PERCENT);
+  g.run.attackRate = pctVersFraction(g.live.attackPercent);
   g.run.avgSmooth = pctVersFraction(LENT_AVG_SMOOTH_PERCENT);
   g.run.peakSmoothFactor = pctVersFraction(LENT_PEAK_SMOOTH_PERCENT);
   g.run.descentDelayMs = secVersMs(LENT_DESCENT_DELAY_SEC);
