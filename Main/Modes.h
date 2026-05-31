@@ -18,8 +18,13 @@
  *   4. MODE_ACTIF dans Config.h
  */
 
+#include <Arduino.h>
+
 // Permet de lancer l'initialisation du mode actif (boot, calibration…)
 void modesSetup();
 
 // Permet d'exécuter une boucle du mode actif
 void modesLoop();
+
+// Permet de changer le mode en cours d'exécution (MODE_IMMEDIAT ou MODE_LENT)
+void modesSetActive(uint8_t mode);

@@ -24,6 +24,7 @@
 
 // Réglages modifiables en live (Config.h au boot, puis page web /api/settings)
 struct LiveConfig {
+  uint8_t activeMode;     // MODE_IMMEDIAT ou MODE_LENT (modifiable via l'app web)
   int adcFinZoneVert;     // Seuil fin zone verte (peak ADC)
   int adcFinZoneOrange;   // Seuil fin zone orange (peak ADC)
   uint8_t maxBrightness;  // Luminosité ruban 0-255
@@ -96,3 +97,9 @@ void configApplyLent();
 
 // Permet d'appliquer attackPercent → g.run.attackRate après changement web
 void liveApplyAttackRate();
+
+// Permet de restaurer tous les réglages par défaut (Config.h, garde le mode actuel)
+void liveConfigResetDefaults();
+
+// Permet de restaurer un seul réglage : "vert", "orange", "bright", "attack"
+void liveResetField(const char *field);

@@ -13,9 +13,9 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
 | **Carte** | WeMos D1 R1 / R2 / mini (ESP8266) |
 | **Micro** | MAX4466 (GY) sur **A0** |
 | **LED** | Ruban WS2812B sur **D2** (GPIO4) |
-| **Mode actuel** | Immédiat — VU réactif + zones couleur + flash bleu |
-| **Réglages** | `Main/Config.h` (+ page web si Wi-Fi actif) |
-| **Wi-Fi** | Point d'accès `Cantaluz` → `http://192.168.4.1` |
+| **Modes** | **Flash** (pics → flashs bleus) ou **Standard** (vu-mètre fluide, sans flash) — commutable depuis l’app |
+| **Réglages** | `Main/Config.h` au boot ; seuils et luminosité aussi via l’app web (jusqu’au redémarrage) |
+| **Wi-Fi** | `Cantaluz` / `cantaluz1` → `http://cantaluz.local` ou `192.168.4.1` (portail captif) |
 
 ```
 [DIN]  ████████░░░░░░░░░░░░░░░░░░░░░░  → fin du ruban
@@ -59,9 +59,13 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
 6. Téléverser **`Main.ino`** (moniteur série **fermé** pendant l’upload).
 7. (Optionnel) Moniteur série **115200** baud si `DEBUG_SERIAL` est actif.
 8. **Téléphone** — si `WIFI_ENABLE` est à `1` dans `Config.h` :
-   - Se connecter au Wi-Fi **`Cantaluz`** (mot de passe par défaut : `cantaluz1`, modifiable dans `Config.h`).
-   - Ouvrir **`http://192.168.4.1`** dans le navigateur.
-   - Voir le niveau sonore en direct et ajuster luminosité, zones vert/orange et montée de la barre.
+   - Se connecter au Wi-Fi **`Cantaluz`** (mot de passe : `cantaluz1`).
+   - L’**app** s’ouvre via le portail captif, ou ouvrir **Chrome** sur `http://cantaluz.local` / `192.168.4.1`.
+   - Slogan : *« Outil d’accompagnement au calme. »*
+   - **Dashboard** : graphique d’ambiance (30 s), barre VU, choix du mode **Flash** ou **Standard**.
+   - **Réglages** : zone calme, zone animée, luminosité, montée de la barre ; bouton **↺** = valeur par défaut (`Config.h`) ; **i** = bulle d’aide.
+   - Les réglages web s’appliquent tout de suite sur le ruban ; au **redémarrage** de la carte, c’est `Config.h` qui reprend la main.
+   - **Ne pas** laisser le moniteur série ouvert en usage normal (sature l’ESP8266).
 
 ### Test Wi-Fi matériel (si aucun réseau visible)
 
@@ -95,8 +99,8 @@ Tous les paramètres utilisateur sont dans **`Main/Config.h`**, documentés ains
 
 | Document | Contenu |
 |----------|---------|
-| [PARAMETRES.md](PARAMETRES.md) | Rappel des sections et du mode immédiat |
-| [FICHIERS.md](FICHIERS.md) | Architecture du code, flux boot / boucle |
+| [Main/PARAMETRES.md](Main/PARAMETRES.md) | Modes Flash/Standard, app web, sections `Config.h` |
+| [Main/FICHIERS.md](Main/FICHIERS.md) | Architecture du code, flux boot / boucle / API |
 
 **Ne pas modifier** le code des modules pour un simple réglage : tout passe par `Config.h`.
 
@@ -107,27 +111,37 @@ Tous les paramètres utilisateur sont dans **`Main/Config.h`**, documentés ains
 ```
 Cantaluz/
 └── Main/                     ← dossier sketch Arduino (nom = Main.ino)
-    ├── README.md             ← ce fichier
     ├── Main.ino              ← point d'entrée (setup / loop)
-    ├── Config.h              ← réglages
-    ├── Types.h
-    ├── ModeImmediat.*        ← comportement actuel
+    ├── Config.h              ← réglages par défaut (boot)
+    ├── AppState.*            ← état global + LiveConfig (web)
+    ├── Modes.*               ← dispatch Flash / Standard
+    ├── ModeImmediat.*        ← mode Flash (VU + flash bleu)
+    ├── ModeLent.*            ← mode Standard (VU adouci)
     ├── MicSensor.*           ← micro + barre VU
     ├── LedStrip.*            ← ruban WS2812B
-    ├── FlashEtat.*           ← flashs bleus
+    ├── FlashEtat.*           ← flashs bleus (mode Flash)
+    ├── WifiPortal.*          ← SoftAP, API, portail captif
+    ├── WebAppHtml.h          ← interface mobile (Dashboard / Réglages)
     └── …
+WifiMinimal/                  ← test Wi-Fi matériel seul (Cantaluz_TEST)
 ```
 
 ---
 
-## Comportement (mode immédiat)
+## Comportement des modes
+
+| App (nom affiché) | Firmware | Comportement |
+|-------------------|----------|--------------|
+| **Flash** | `MODE_IMMEDIAT` | VU réactif ; montée vert → orange → rouge → **flashs bleus** |
+| **Standard** | `MODE_LENT` | Vu-mètre fluide selon l’ambiance ; **pas de flash** ; paramètres `LENT_*` |
+
+Commun aux deux modes :
 
 1. **Boot** — ruban bleu, animation VU verte, calibration du silence.
-2. **En fonctionnement** — la barre monte vite avec le son ; elle redescend après quelques secondes sous la moyenne.
-3. **Paliers** — passage vert → orange → rouge déclenche des **flashs bleus** (un cran à la fois, pas à la descente).
-4. **Couleurs sur le ruban** — réparties selon les plages ADC (`ADC_FIN_ZONE_VERT`, `ADC_FIN_ZONE_ORANGE`), pas selon le volume instantané de chaque LED.
+2. **Barre VU** — hauteur selon le volume ; descente après quelques secondes sous la moyenne.
+3. **Couleurs sur le ruban** — réparties selon les plages ADC (`ADC_FIN_ZONE_VERT`, `ADC_FIN_ZONE_ORANGE`).
 
-D’autres modes « LED vs bruit » pourront être ajoutés via `Modes.cpp` et `MODE_ACTIF` dans `Config.h`.
+Le mode au **démarrage** est `MODE_ACTIF` dans `Config.h` ; l’app web peut le changer à chaud via `Modes.cpp`. D’autres comportements pourront être ajoutés de la même façon.
 
 ---
 

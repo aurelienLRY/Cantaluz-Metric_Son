@@ -24,8 +24,8 @@
 
 | Fichier | Rôle | Modifier ? |
 |---------|------|------------|
-| **AppState.h** | Structure `g` : LED, niveaux, minuteurs, états | Non |
-| **AppState.cpp** | Variable globale `g`, `configApply()`, `stateName()` | Non |
+| **AppState.h** | Structure `g` : LED, niveaux, minuteurs, `LiveConfig` (web) | Non |
+| **AppState.cpp** | `g`, `configApply()`, `liveConfigInit()`, `liveResetField()` | Non |
 
 ### Modules fonctionnels
 
@@ -35,15 +35,16 @@
 | **LedStrip.h / .cpp** | Ruban, zones couleur, boot visuel | BANDEAU, PLAGES ADC, BOOT |
 | **FlashEtat.h / .cpp** | Flashs bleus, paliers montée/descente | FLASH BLEU, PLAGES ADC |
 | **DebugLog.h / .cpp** | Moniteur série 115200 | DEBUG SÉRIE |
-| **WifiPortal.h / .cpp** | SoftAP + page web téléphone | WIFI dans Config.h |
+| **WifiPortal.h / .cpp** | SoftAP, mDNS, portail captif, API `/api/*` | WIFI dans Config.h |
+| **WebAppHtml.h** | App mobile : Dashboard (graphique, VU, Flash/Standard) + Réglages | Textes UI uniquement |
 
 ### Modes
 
 | Fichier | Rôle | Modifier ? |
 |---------|------|------------|
-| **ModeImmediat.h / .cpp** | Mode immédiat (VU + flash bleu) | Logique mode réactif |
-| **ModeLent.h / .cpp** | Mode lent (VU adouci, sans flash) | Logique mode calme |
-| **Modes.h / .cpp** | Appelle le mode choisi par `MODE_ACTIF` | Pour ajouter un nouveau mode |
+| **ModeImmediat.h / .cpp** | Mode **Flash** (VU + flash bleu) | Logique mode réactif |
+| **ModeLent.h / .cpp** | Mode **Standard** (VU adouci, sans flash) | Logique mode calme |
+| **Modes.h / .cpp** | Dispatch selon `g.live.activeMode` ; `modesSetActive()` | Pour ajouter un nouveau mode |
 | **Main.ino** | `setup()` / `loop()` Arduino | Presque jamais |
 
 ### Documentation
@@ -73,15 +74,21 @@ Main.ino setup()
 
 ```
 Main.ino loop()
+  → wifiPortalLoop()             (si WIFI_ENABLE : DNS + HTTP)
   → modesLoop()
-      → modeImmediatLoop()
-          → flashUpdateTransition()  (si flash en cours)
-          → micSample()
-          → micUpdatePeakSmooth()
-          → micUpdateDisplayLevel()
-          → flashHandleStateMachine()
-          → ledRenderVuMeter()
-          → debugLogStatusIfDue()
+      → modeImmediatLoop()  ou  modeLentLoop()
+          → micSample() … ledRenderVuMeter()
+          → (Flash uniquement) flashHandleStateMachine()
+```
+
+## App web (WifiPortal + WebAppHtml)
+
+```
+Téléphone → Wi-Fi Cantaluz
+  → portail captif ou http://cantaluz.local
+  → WebAppHtml.h (PROGMEM)
+  → /api/status | /api/settings | /api/reset
+  → g.live (LiveConfig) + modesSetActive()
 ```
 
 ---

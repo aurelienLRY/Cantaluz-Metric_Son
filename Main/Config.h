@@ -98,13 +98,15 @@
 #define WIFI_AP_PASS          "cantaluz1" // Mot de passe WPA (8 car. min.)
 #define WIFI_AP_CHANNEL       6       // Canal Wi-Fi 1-13 (essayer 6 ou 11 si invisible)   value: [1 - 13]
 #define WIFI_HTTP_PORT        80      // Port de la page web   value: [80 - 8080]
+#define WIFI_MDNS_NAME        "cantaluz"  // Nom local : http://cantaluz.local (mDNS)
+#define WIFI_CAPTIVE_PORTAL   1       // 1 = ouvre la page auto à la connexion Wi-Fi   value: [0 - 1]
 
 // ═══════════════════════════════════════════════════════════════
 //  DEBUG SÉRIE (moniteur série)
 //  ATTENTION : avec Wi-Fi actif, le debug bloque la radio ESP8266.
 //  Garder DEBUG_SERIAL commenté en usage normal (téléphone).
 // ═══════════════════════════════════════════════════════════════
-// #define DEBUG_SERIAL                  // Décommenter seulement pour diagnostiquer sans Wi-Fi
+#define DEBUG_SERIAL                  // Décommenter seulement pour diagnostiquer sans Wi-Fi
 #define SERIAL_BAUD             115200 // Permet de régler la vitesse du port série   value: [9600 - 921600]
 #define DEBUG_INTERVAL_MS       5000  // Si debug actif : intervalle long pour ne pas couper le Wi-Fi   value: [1000 - 30000]
 #define LOOP_MIN_PERIOD_MS      25    // Pause min. entre 2 boucles (laisse respirer le Wi-Fi)   value: [10 - 100]

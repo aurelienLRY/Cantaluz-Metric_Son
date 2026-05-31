@@ -9,11 +9,19 @@
 
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
+#include <DNSServer.h>
 
 #include "AppState.h"
 #include "LedStrip.h"
+#include "Modes.h"
+#include "WebAppHtml.h"
 
 static ESP8266WebServer server(WIFI_HTTP_PORT);
+static DNSServer dnsServer;
+static const byte WIFI_DNS_PORT = 53;
+static bool s_mdnsRunning = false;
+static bool s_dnsRunning = false;
 static bool s_apRunning = false;
 static bool s_webRunning = false;
 static unsigned long s_lastApCheckMs = 0;
@@ -46,93 +54,10 @@ static void wifiLogHeap(const __FlashStringHelper *label) {
   Serial.println(ESP.getMaxFreeBlockSize());
 }
 
-static const char PAGE_HTML[] PROGMEM = R"rawliteral(
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cantaluz</title>
-<style>
-*{box-sizing:border-box}
-body{font-family:system-ui,sans-serif;margin:0;padding:1rem;background:#0d1a12;color:#e8f5e9}
-h1{font-size:1.4rem;margin:0 0 .25rem;color:#7cff9a}
-.sub{opacity:.75;font-size:.85rem;margin-bottom:1rem}
-.card{background:#152820;border-radius:12px;padding:1rem;margin-bottom:1rem}
-.row{display:flex;justify-content:space-between;margin:.35rem 0}
-.val{font-weight:700;color:#7cff9a}
-label{display:block;margin:.75rem 0 .25rem;font-size:.9rem}
-input[type=range]{width:100%}
-button{width:100%;margin-top:1rem;padding:.75rem;border:0;border-radius:8px;
-background:#2e7d32;color:#fff;font-size:1rem;font-weight:600}
-.state{font-size:1.2rem;text-align:center;padding:.5rem}
-</style>
-</head>
-<body>
-<h1>Cantaluz</h1>
-<p class="sub">La lumière qui répond au son — réglages live</p>
-<div class="card">
-<div class="state" id="state">—</div>
-<div class="row"><span>Peak micro</span><span class="val" id="peak">0</span></div>
-<div class="row"><span>Barre VU</span><span class="val" id="bar">0 %</span></div>
-<div class="row"><span>Calibration max</span><span class="val" id="vuMax">0</span></div>
-</div>
-<div class="card">
-<label>Zone verte (peak ≤) <span id="vVert"></span></label>
-<input type="range" id="vert" min="50" max="900" step="10">
-<label>Zone orange (peak ≤) <span id="vOrange"></span></label>
-<input type="range" id="orange" min="100" max="1020" step="10">
-<label>Luminosité <span id="vBright"></span></label>
-<input type="range" id="bright" min="5" max="255" step="5">
-<label>Montée barre (%) <span id="vAttack"></span></label>
-<input type="range" id="attack" min="5" max="100" step="5">
-<button type="button" id="apply">Appliquer</button>
-</div>
-<p class="sub">IP : <span id="ip">192.168.4.1</span></p>
-<script>
-function qs(id){return document.getElementById(id)}
-function syncSliders(j){
-  qs('vert').value=j.vert; qs('orange').value=j.orange;
-  qs('bright').value=j.brightness; qs('attack').value=j.attack;
-  qs('vVert').textContent=j.vert;
-  qs('vOrange').textContent=j.orange;
-  qs('vBright').textContent=j.brightness;
-  qs('vAttack').textContent=j.attack;
+static void wifiApplyToHardware() {
+  FastLED.setBrightness(g.live.maxBrightness);
+  ledComputeZonesFromPlages();
 }
-async function refresh(){
-  try{
-    const r=await fetch('/api/status');
-    const j=await r.json();
-    qs('state').textContent=j.state;
-    qs('peak').textContent=j.peak;
-    qs('bar').textContent=Math.round(j.display*100)+' %';
-    qs('vuMax').textContent=j.vuMax;
-    if(!window._slidersInit){syncSliders(j);window._slidersInit=1}
-    qs('ip').textContent=j.ip;
-  }catch(e){}
-}
-['vert','orange','bright','attack'].forEach(function(id){
-  qs(id).oninput=function(){
-    if(id==='vert') qs('vVert').textContent=this.value;
-    else if(id==='orange') qs('vOrange').textContent=this.value;
-    else if(id==='bright') qs('vBright').textContent=this.value;
-    else qs('vAttack').textContent=this.value;
-  };
-});
-qs('apply').onclick=async function(){
-  const p=new URLSearchParams({
-    vert:qs('vert').value, orange:qs('orange').value,
-    bright:qs('bright').value, attack:qs('attack').value
-  });
-  await fetch('/api/settings?'+p.toString());
-  refresh();
-};
-setInterval(refresh,450);
-refresh();
-</script>
-</body>
-</html>
-)rawliteral";
 
 static void wifiApplySettingsFromRequest() {
   if (server.hasArg("vert")) {
@@ -164,40 +89,173 @@ static void wifiApplySettingsFromRequest() {
       liveApplyAttackRate();
     }
   }
-  ledComputeZonesFromPlages();
+  if (server.hasArg("mode")) {
+    int m = server.arg("mode").toInt();
+    if (m == MODE_IMMEDIAT || m == MODE_LENT) {
+      modesSetActive((uint8_t)m);
+    }
+  }
+  wifiApplyToHardware();
 }
 
-static void handleRoot() {
-  server.send_P(200, PSTR("text/html"), PAGE_HTML);
+static const char *wifiModeLabel(uint8_t mode) {
+  return (mode == MODE_LENT) ? "Standard" : "Flash";
+}
+
+static const char *wifiStateLabel(ColorState s) {
+  switch (s) {
+    case STATE_GREEN:  return "Calme";
+    case STATE_ORANGE: return "Animé";
+    case STATE_RED:    return "Intense";
+  }
+  return "Calme";
+}
+
+static void handleReset() {
+  if (server.hasArg(F("field"))) {
+    String f = server.arg(F("field"));
+    f.toLowerCase();
+    liveResetField(f.c_str());
+    wifiApplyToHardware();
+    char buf[160];
+    snprintf(buf, sizeof(buf),
+      "{\"ok\":true,\"field\":\"%s\",\"vert\":%d,\"orange\":%d,\"brightness\":%u,\"attack\":%u}",
+      f.c_str(),
+      g.live.adcFinZoneVert,
+      g.live.adcFinZoneOrange,
+      (unsigned)g.live.maxBrightness,
+      (unsigned)g.live.attackPercent);
+    server.send(200, F("application/json"), buf);
+    return;
+  }
+
+  uint8_t mode = g.live.activeMode;
+  liveConfigResetDefaults();
+  modesSetActive(mode);
+  wifiApplyToHardware();
+  server.send(200, F("application/json"), F("{\"ok\":true,\"reset\":\"all\"}"));
+}
+
+static void wifiSendNoCacheHeaders() {
+  server.sendHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+  server.sendHeader(F("Pragma"), F("no-cache"));
+  server.sendHeader(F("Expires"), F("0"));
+  server.sendHeader(F("Connection"), F("close"));
+}
+
+static void handleApp() {
+  wifiSendNoCacheHeaders();
+  server.send_P(200, PSTR("text/html"), APP_HTML);
+}
+
+static void handleCaptiveLanding() {
+  handleApp();
+}
+
+static void handleCaptiveHead() {
+  wifiSendNoCacheHeaders();
+  server.send(200, F("text/html"), F(""));
+}
+
+static void handleNotFound() {
+  if (server.method() == HTTP_HEAD) {
+    handleCaptiveHead();
+    return;
+  }
+  if (server.method() == HTTP_GET) {
+    handleCaptiveLanding();
+    return;
+  }
+  server.send(404, F("text/plain"), F("Not found"));
+}
+
+static void wifiRegisterCaptiveRoutes() {
+  server.on("/generate_204", handleCaptiveLanding);
+  server.on("/gen_204", handleCaptiveLanding);
+  server.on("/mobile/status.php", handleCaptiveLanding);
+  server.on("/canonical.html", handleCaptiveLanding);
+  server.on("/success.txt", handleCaptiveLanding);
+  server.on("/success.html", handleCaptiveLanding);
+  server.on("/chat", handleCaptiveLanding);
+  server.on("/hotspot-detect.html", handleCaptiveLanding);
+  server.on("/library/test/success.html", handleCaptiveLanding);
+  server.on("/connecttest.txt", handleCaptiveLanding);
+  server.on("/ncsi.txt", handleCaptiveLanding);
+  server.on("/redirect", handleCaptiveLanding);
+  server.on("/fwlink", handleCaptiveLanding);
+  server.on("/check_network_status.txt", handleCaptiveLanding);
+}
+
+static void wifiPortalStartDnsMdns() {
+#if WIFI_CAPTIVE_PORTAL
+  dnsServer.stop();
+  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+  if (dnsServer.start(WIFI_DNS_PORT, "*", WiFi.softAPIP())) {
+    s_dnsRunning = true;
+  } else {
+    s_dnsRunning = false;
+    Serial.println(F("DNS portail: ECHEC"));
+  }
+#else
+  s_dnsRunning = false;
+#endif
+
+  MDNS.end();
+  s_mdnsRunning = false;
+  if (MDNS.begin(WIFI_MDNS_NAME)) {
+    MDNS.addService("http", "tcp", WIFI_HTTP_PORT);
+    s_mdnsRunning = true;
+    Serial.print(F("Adresse locale: http://"));
+    Serial.print(WIFI_MDNS_NAME);
+    Serial.println(F(".local"));
+  } else {
+    Serial.println(F("mDNS: ECHEC (utiliser http://192.168.4.1)"));
+  }
 }
 
 static void handleStatus() {
   IPAddress ip = WiFi.softAPIP();
-  char buf[360];
+  char buf[520];
   int displayPct = (int)(g.displayLevel * 100.0f + 0.5f);
   snprintf(buf, sizeof(buf),
-    "{\"peak\":%d,\"avg\":%d,\"display\":%.3f,\"displayPct\":%d,"
-    "\"state\":\"%s\",\"vuMax\":%d,"
+    "{\"niveau\":%d,\"barre\":%d,\"display\":%.3f,"
+    "\"couleur\":\"%s\",\"calibration\":%d,"
     "\"vert\":%d,\"orange\":%d,\"brightness\":%u,\"attack\":%u,"
-    "\"ip\":\"%u.%u.%u.%u\",\"ssid\":\"%s\"}",
-    g.lastPeak,
-    g.lastMicAvg,
-    g.displayLevel,
+    "\"defVert\":%d,\"defOrange\":%d,\"defBright\":%u,\"defAttack\":%u,"
+    "\"mode\":%u,\"modeName\":\"%s\","
+    "\"ip\":\"%u.%u.%u.%u\",\"host\":\"%s.local\",\"ssid\":\"%s\"}",
     displayPct,
-    stateName(g.currentState),
+    displayPct,
+    g.displayLevel,
+    wifiStateLabel(g.currentState),
     g.vuMaxPeak,
     g.live.adcFinZoneVert,
     g.live.adcFinZoneOrange,
     (unsigned)g.live.maxBrightness,
     (unsigned)g.live.attackPercent,
+    ADC_FIN_ZONE_VERT,
+    ADC_FIN_ZONE_ORANGE,
+    (unsigned)(g.live.activeMode == MODE_LENT ? LENT_MAX_BRIGHTNESS : MAX_BRIGHTNESS),
+    (unsigned)(g.live.activeMode == MODE_LENT ? LENT_ATTACK_PERCENT : ATTACK_PERCENT),
+    (unsigned)g.live.activeMode,
+    wifiModeLabel(g.live.activeMode),
     ip[0], ip[1], ip[2], ip[3],
+    WIFI_MDNS_NAME,
     WIFI_AP_SSID);
   server.send(200, F("application/json"), buf);
 }
 
 static void handleSettings() {
   wifiApplySettingsFromRequest();
-  server.send(200, F("application/json"), F("{\"ok\":true}"));
+  char buf[200];
+  snprintf(buf, sizeof(buf),
+    "{\"ok\":true,\"vert\":%d,\"orange\":%d,\"brightness\":%u,\"attack\":%u,\"mode\":%u}",
+    g.live.adcFinZoneVert,
+    g.live.adcFinZoneOrange,
+    (unsigned)g.live.maxBrightness,
+    (unsigned)g.live.attackPercent,
+    (unsigned)g.live.activeMode);
+  server.send(200, F("application/json"), buf);
 }
 
 static bool wifiStartSoftApOnce() {
@@ -264,6 +322,12 @@ bool wifiPortalStartRadio() {
   Serial.println(WIFI_AP_CHANNEL);
   Serial.print(F("IP: http://"));
   wifiPrintIp(WiFi.softAPIP());
+  Serial.print(F("Nom: http://"));
+  Serial.print(WIFI_MDNS_NAME);
+  Serial.println(F(".local"));
+#if WIFI_CAPTIVE_PORTAL
+  Serial.println(F("Portail captif: actif (page auto a la connexion)"));
+#endif
   Serial.print(F("MAC AP: "));
   Serial.println(WiFi.softAPmacAddress());
 
@@ -291,11 +355,21 @@ void wifiPortalStartWeb() {
     Serial.println(F("Serveur web: ignore (SoftAP inactif)"));
     return;
   }
-  server.on("/", handleRoot);
+  server.on("/", handleApp);
+  server.on("/reglages", handleApp);
+  server.on("/app", handleApp);
   server.on("/api/status", handleStatus);
   server.on("/api/settings", handleSettings);
+  server.on("/api/reset", handleReset);
+
+#if WIFI_CAPTIVE_PORTAL
+  wifiRegisterCaptiveRoutes();
+  server.onNotFound(handleNotFound);
+#endif
+
   server.begin();
   s_webRunning = true;
+  wifiPortalStartDnsMdns();
   wifiLogHeap(F("Serveur HTTP"));
 }
 
@@ -307,8 +381,21 @@ void wifiPortalSetup() {
 void wifiPortalLoop() {
   WiFi.setSleepMode(WIFI_NONE_SLEEP);
 
+#if WIFI_CAPTIVE_PORTAL
+  if (s_dnsRunning) {
+    for (uint8_t i = 0; i < 8; i++) {
+      dnsServer.processNextRequest();
+    }
+  }
+#endif
+  if (s_mdnsRunning) {
+    MDNS.update();
+  }
+
   if (s_webRunning) {
-    server.handleClient();
+    for (uint8_t i = 0; i < 12; i++) {
+      server.handleClient();
+    }
   }
 
   unsigned long now = millis();
@@ -321,6 +408,9 @@ void wifiPortalLoop() {
       Serial.println(F("WiFi: AP perdu en boucle — redemarrage"));
       s_apRunning = wifiStartSoftApOnce();
       wifiLedApOk(s_apRunning);
+      if (s_apRunning && s_webRunning) {
+        wifiPortalStartDnsMdns();
+      }
     }
   }
 

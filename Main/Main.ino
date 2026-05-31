@@ -24,8 +24,8 @@
  *   DebugLog.*       → traces série
  *   WifiPortal.*     → réseau Cantaluz + page web (téléphone)
  *
- * Wi-Fi (Config.h) : connecter le téléphone au réseau Cantaluz,
- * puis ouvrir http://192.168.4.1
+ * Wi-Fi (Config.h) : réseau Cantaluz → http://cantaluz.local
+ * (portail captif : la page peut s'ouvrir toute seule à la connexion)
  *
  * Documentation détaillée : FICHIERS.md
  */

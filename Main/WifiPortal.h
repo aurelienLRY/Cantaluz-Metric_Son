@@ -3,7 +3,7 @@
  * WifiPortal.h — Point d'accès Wi-Fi + page web (téléphone)
  *
  * La carte crée le réseau WIFI_AP_SSID (Config.h).
- * Ouvrir http://192.168.4.1 sur le téléphone une fois connecté.
+ * App web directe : http://cantaluz.local (modes, réglages, bulles d'aide).
  */
 
 // Démarre le radio SoftAP le plus tôt possible (avant FastLED / ruban)
