@@ -100,6 +100,7 @@ Tous les paramètres utilisateur sont dans **`Main/Config.h`**, documentés ains
 
 | Document | Contenu |
 |----------|---------|
+| [FICHE_UTILISATEUR.md](FICHE_UTILISATEUR.md) | **Fiche A4** — utilisation en classe (modes, app, démarrage) |
 | [Main/PARAMETRES.md](Main/PARAMETRES.md) | Modes Flash/Standard, app web, sections `Config.h` |
 | [Main/FICHIERS.md](Main/FICHIERS.md) | Architecture du code, flux boot / boucle / API |
 

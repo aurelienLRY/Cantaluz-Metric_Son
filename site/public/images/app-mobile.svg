@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="700" viewBox="0 0 400 700">
+  <rect width="400" height="700" fill="#0f1219"/>
+  <rect x="100" y="40" width="200" height="420" rx="24" fill="#1e293b" stroke="#334155" stroke-width="4"/>
+  <rect x="115" y="80" width="170" height="32" rx="8" fill="#4ade80" opacity="0.9"/>
+  <rect x="115" y="130" width="170" height="60" rx="8" fill="#1f2937"/>
+  <rect x="115" y="210" width="80" height="36" rx="6" fill="#3b82f6"/>
+  <rect x="205" y="210" width="80" height="36" rx="6" fill="#374151"/>
+  <rect x="115" y="260" width="170" height="80" rx="8" fill="#1f2937"/>
+  <text x="200" y="520" text-anchor="middle" fill="#9ca3af" font-family="system-ui,sans-serif" font-size="18">Capture app mobile</text>
+  <text x="200" y="548" text-anchor="middle" fill="#6b7280" font-family="system-ui,sans-serif" font-size="13">app-mobile.svg</text>
+</svg>

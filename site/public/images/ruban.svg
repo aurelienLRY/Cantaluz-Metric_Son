@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#0f1219"/>
+  <rect x="40" y="220" width="720" height="60" rx="30" fill="#1f2937"/>
+  <circle cx="80" cy="250" r="14" fill="#22c55e"/>
+  <circle cx="130" cy="250" r="14" fill="#4ade80"/>
+  <circle cx="180" cy="250" r="14" fill="#fbbf24"/>
+  <circle cx="230" cy="250" r="14" fill="#fb923c"/>
+  <circle cx="280" cy="250" r="14" fill="#f97316"/>
+  <circle cx="330" cy="250" r="14" fill="#ef4444"/>
+  <circle cx="380" cy="250" r="14" fill="#dc2626"/>
+  <circle cx="430" cy="250" r="14" fill="#ef4444" opacity="0.5"/>
+  <circle cx="480" cy="250" r="14" fill="#f97316" opacity="0.4"/>
+  <circle cx="530" cy="250" r="14" fill="#22c55e" opacity="0.3"/>
+  <text x="400" y="380" text-anchor="middle" fill="#9ca3af" font-family="system-ui,sans-serif" font-size="22">Photo du ruban LED  à remplacer</text>
+  <text x="400" y="410" text-anchor="middle" fill="#6b7280" font-family="system-ui,sans-serif" font-size="14">ruban.svg ’ ruban.jpg</text>
+</svg>

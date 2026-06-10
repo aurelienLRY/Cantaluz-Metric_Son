@@ -1,0 +1,13 @@
+Images marketing — à remplacer
+================================
+
+Placez vos photos dans ce dossier (JPG ou PNG recommandé).
+
+  hero-cantine.svg     → cantine ou classe en usage
+  produit.svg          → photo produit (boîtier + bandeau, angle marketing)
+  app-mobile.svg       → capture de l'application web sur téléphone
+  enfants.svg          → élèves en autonomie (visages floutés si besoin)
+  calendretta.svg      → logo ou établissement pilote (optionnel)
+
+Conservez les mêmes noms de fichier ou mettez à jour les imports
+dans src/components/sections/*.tsx

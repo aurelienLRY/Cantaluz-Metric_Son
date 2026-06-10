@@ -1,0 +1,14 @@
+Images de présentation Cantaluz
+================================
+
+Remplacez les fichiers SVG par vos photos (JPG ou PNG recommandé).
+
+Fichiers attendus :
+  - boitier.svg      → boîtier / carte dans son enceinte
+  - ruban.svg        → ruban LED WS2812B
+  - app-mobile.svg   → capture de l'app web sur téléphone
+  - classe.svg       → utilisation en classe (optionnel)
+  - schema.svg       → schéma des composants (optionnel)
+
+Si vous changez l'extension (.jpg), mettez à jour les chemins dans
+src/components/sections/*.tsx ou gardez le même nom de fichier.

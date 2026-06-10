@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#111827"/>
+  <rect x="0" y="350" width="800" height="150" fill="#1f2937"/>
+  <rect x="60" y="180" width="120" height="80" rx="4" fill="#374151"/>
+  <rect x="220" y="180" width="120" height="80" rx="4" fill="#374151"/>
+  <rect x="380" y="180" width="120" height="80" rx="4" fill="#374151"/>
+  <rect x="540" y="180" width="120" height="80" rx="4" fill="#374151"/>
+  <rect x="40" y="100" width="720" height="12" rx="6" fill="#22c55e" opacity="0.6"/>
+  <text x="400" y="430" text-anchor="middle" fill="#9ca3af" font-family="system-ui,sans-serif" font-size="22">Photo en classe  à remplacer</text>
+</svg>
