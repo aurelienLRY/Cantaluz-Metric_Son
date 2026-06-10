@@ -1,8 +1,5 @@
 /*
- * DebugLog.cpp — Implémentation des traces série
- *
- * Nécessite Config.h avant DebugLog.h pour que DEBUG_SERIAL soit défini
- * (sinon ce fichier ne compile pas le corps de debugLogStatusIfDue).
+ * DebugLog.cpp — Traces série (DEBUG_SERIAL uniquement)
  */
 
 #include "Config.h"
@@ -22,61 +19,32 @@ void debugLogStatusIfDue(const MicSample &mic) {
   }
   g.lastDebugMs = now;
 
+  int pEff = micPeakEffective(mic.peak);
+  int peakFlash = micPeakEffectifPourFlash(pEff);
+  ColorState zonePlage = ledZoneDepuisPeak(peakFlash);
   int lit = MIN_LEDS_ON + (int)((LED_COUNT - MIN_LEDS_ON) * g.displayLevel);
-  int peakEff = micPeakEffectifPourFlash(mic.peak);
-  ColorState zonePlage = ledZoneDepuisPeak(peakEff);
-  ColorState cible = flashProchainEtatMontee(zonePlage);
 
   Serial.println(F("----------"));
-  Serial.print(F("peak="));
+  Serial.print(F("raw="));
   Serial.print(mic.peak);
   Serial.print(F(" eff="));
-  Serial.print(peakEff);
-  Serial.print(F(" zone="));
-  Serial.print(stateName(zonePlage));
-  Serial.print(F(" etat="));
+  Serial.print(pEff);
+  Serial.print(F(" barre="));
+  Serial.print((int)(g.displayLevel * 100));
+  Serial.print(F("% etat="));
   Serial.print(stateName(g.currentState));
-#if MODE_ACTIF == MODE_LENT
-  Serial.println(F(" (mode lent — pas de flash bleu)"));
-#else
-  if (cible > g.currentState) {
-    Serial.print(F(" -> flash "));
-    Serial.println(stateName(cible));
-    if (g.stateHoldSinceMs > 0) {
-      Serial.print(F("attente flash "));
-      Serial.print(now - g.stateHoldSinceMs);
-      Serial.print(F("/"));
-      Serial.println(STATE_HOLD_MS);
-    }
-  } else {
-    Serial.println(F(" (pas de montee)"));
-  }
-  Serial.print(F("Flash si peak>"));
-  Serial.print(ADC_FIN_ZONE_VERT);
-  Serial.print(F(" (orange) ou >"));
-  Serial.print(ADC_FIN_ZONE_ORANGE);
-  Serial.println(F(" (rouge)"));
-  if (g.transitionActive) {
-    Serial.print(F(">>> FLASH step "));
-    Serial.print(g.flashStep);
-    Serial.print(F("/"));
-    Serial.print(FLASH_COUNT * 2);
-    Serial.println(F(" <<<"));
-  }
-#endif
-  Serial.print(F("LED 0-"));
-  Serial.print(g.ledFinZoneVert - 1);
-  Serial.print(F("=VERT "));
-  Serial.print(g.ledFinZoneVert);
-  Serial.print(F("-"));
-  Serial.print(g.ledFinZoneOrange - 1);
-  Serial.print(F("=ORANGE "));
-  Serial.print(g.ledFinZoneOrange);
-  Serial.print(F("-"));
-  Serial.print(LED_COUNT - 1);
-  Serial.println(F("=ROUGE"));
-  Serial.print(F("allumees="));
+  Serial.print(F(" zone="));
+  Serial.println(stateName(zonePlage));
+  Serial.print(F("Seuils vert<="));
+  Serial.print(g.live.adcFinZoneVert);
+  Serial.print(F(" orange<="));
+  Serial.println(g.live.adcFinZoneOrange);
+  Serial.print(F("LED allumees="));
   Serial.println(lit);
+  if (g.transitionActive) {
+    Serial.print(F("FLASH step "));
+    Serial.println(g.flashStep);
+  }
 }
 
 #endif

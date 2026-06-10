@@ -29,7 +29,7 @@ ColorState ledZoneDepuisPeak(int peak);
 // Permet de redescendre d'état sans rebond (utilise ADC_HYST_VERT / ADC_HYST_ORANGE)
 ColorState ledStateWithHysteresis(int peak, ColorState cur);
 
-// Permet de colorer une LED selon sa position sur le ruban (pas selon le volume)
+// Permet de colorer une LED selon sa position sur le ruban (pas selon le volume instantané)
 CRGB ledCouleurPourIndex(int index);
 
 // Permet d'allumer litCount LED depuis le début avec les couleurs de zone

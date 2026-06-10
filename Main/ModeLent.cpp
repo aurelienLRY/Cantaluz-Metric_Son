@@ -47,13 +47,7 @@ void modeLentSetup() {
 
   ledRunBootSequence();
 
-#if USE_AUTO_VU_MAX
-  micCalibrateVuMax();
-#else
-  g.vuMaxPeak = (MANUAL_VU_MAX > 0) ? MANUAL_VU_MAX : 500;
-#endif
-
-  g.peakSmooth = g.peakAverage;
+  micInitVuFromSettings();
   g.currentState = STATE_GREEN;
   g.transitionActive = false;
   g.lastLoopMs = millis();
@@ -78,13 +72,13 @@ void modeLentLoop() {
 
   MicSample mic;
   micSample(mic);
-  g.lastPeak = mic.peak;
+  int peak = micPeakEffective(mic.peak);
+  g.lastPeak = peak;
   g.lastMicAvg = mic.avg;
-  micUpdatePeakSmooth(mic.peak);
-  micUpdateDisplayLevel(mic.peak, dtSec);
+  micUpdatePeakSmooth(peak);
+  micUpdateDisplayLevel(peak, dtSec);
 
-  // Suivi silencieux du palier (debug / cohérence), sans flash
-  int peakEff = micPeakEffectifPourFlash(mic.peak);
+  int peakEff = micPeakEffectifPourFlash(peak);
   g.currentState = ledStateWithHysteresis(peakEff, g.currentState);
 
   ledRenderVuMeter(g.displayLevel);

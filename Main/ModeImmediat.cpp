@@ -2,7 +2,7 @@
  * ModeImmediat.cpp — Enchaînement boot + boucle du mode immédiat
  *
  * Ordre au setup :
- *   zones LED → init FastLED → bleu boot → configApply → anim VU → calibration
+ *   zones LED → init FastLED → bleu boot → configApply → anim VU → sensibilité
  *
  * Ordre à chaque loop :
  *   flash en cours ? → sinon micro → niveau barre → machine flash → render VU
@@ -67,17 +67,21 @@ void modeImmediatSetup() {
 
   ledRunBootSequence();
 
-#if USE_AUTO_VU_MAX
-  micCalibrateVuMax();
-#else
-  g.vuMaxPeak = (MANUAL_VU_MAX > 0) ? MANUAL_VU_MAX : 500;
-#endif
-
-  g.peakSmooth = g.peakAverage;
+  micInitVuFromSettings();
   g.lastLoopMs = millis();
 
 #ifdef DEBUG_SERIAL
-  Serial.println(F("Pret. Cri / voix forte -> flash bleu + orange/rouge."));
+  Serial.print(F("Micro: sens="));
+  Serial.print(g.live.sensitivity);
+  Serial.print(F(" gate="));
+  Serial.print(g.micGate);
+  Serial.print(F(" span="));
+  Serial.println(g.micSpan);
+  Serial.print(F("Seuils eff. vert<="));
+  Serial.print(g.live.adcFinZoneVert);
+  Serial.print(F(" orange<="));
+  Serial.println(g.live.adcFinZoneOrange);
+  Serial.println(F("Pret. Voix forte -> montee + flash bleu si palier."));
 #endif
 }
 
@@ -101,11 +105,12 @@ void modeImmediatLoop() {
 
   MicSample mic;
   micSample(mic);
-  g.lastPeak = mic.peak;
+  int peak = micPeakEffective(mic.peak);
+  g.lastPeak = peak;
   g.lastMicAvg = mic.avg;
-  micUpdatePeakSmooth(mic.peak);
-  micUpdateDisplayLevel(mic.peak, dtSec);
-  flashHandleStateMachine(mic.peak);
+  micUpdatePeakSmooth(peak);
+  micUpdateDisplayLevel(peak, dtSec);
+  flashHandleStateMachine(peak);
 
   if (!g.transitionActive) {
     ledRenderVuMeter(g.displayLevel);
