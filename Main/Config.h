@@ -1,112 +1,184 @@
 #pragma once
 /*
- * Config.h — Paramètres utilisateur (modifier ici)
+ * Config.h — Paramètres utilisateur Cantaluz
  *
- * Format :  // Permet de …   value: [min - max]
- * MODE_ACTIF : voir Modes.h pour ajouter d'autres comportements LED vs bruit.
+ * Où régler quoi ?
+ * ----------------
+ *   Carte / matériel / méditation / Wi-Fi  → ici (Config.h)
+ *   En classe, à la volée                  → app Réglages (LiveConfig, voir ci-dessous)
+ *
+ * Correspondance app ↔ Config.h (valeurs par défaut au boot) :
+ *
+ *   App Réglages          Config.h (défaut)
+ *   ─────────────────     ─────────────────────────────
+ *   Sensibilité           DEFAULT_SENSITIVITY (+ MIC_SENS_* = formule interne)
+ *   Zone calme            ADC_FIN_ZONE_VERT
+ *   Zone animée           ADC_FIN_ZONE_ORANGE
+ *   Luminosité            MAX_BRIGHTNESS ou LENT_MAX_BRIGHTNESS selon le mode
+ *   Montée de la barre    ATTACK_PERCENT ou LENT_ATTACK_PERCENT selon le mode
+ *
+ * Deux jeux « montée / descente / lissage » existent volontairement :
+ *   • sans préfixe     → mode Flash  (MODE_IMMEDIAT)
+ *   • préfixe LENT_*   → mode Standard (MODE_LENT)
+ * Ce ne sont pas des doublons : chaque mode a son comportement.
+ *
+ * Format :  // Description   value: [min - max]
  */
 
 #include <Arduino.h>
 
 // ═══════════════════════════════════════════════════════════════
-//  MODE DE GESTION LED vs BRUIT
+//  MODE AU DÉMARRAGE
 // ═══════════════════════════════════════════════════════════════
-#define MODE_IMMEDIAT  0   // Identifiant mode immédiat (ne pas changer)
-#define MODE_LENT      1   // Identifiant mode lent (ne pas changer)
-#define MODE_ACTIF     MODE_IMMEDIAT  // Permet de choisir le comportement actif   value: [MODE_IMMEDIAT | MODE_LENT]
+#define MODE_IMMEDIAT    0   // Flash
+#define MODE_LENT        1   // Standard
+#define MODE_MEDITATION  2   // Méditation guidée
+#define MODE_ACTIF       MODE_IMMEDIAT   // value: [MODE_IMMEDIAT | MODE_LENT | MODE_MEDITATION]
 
 // ═══════════════════════════════════════════════════════════════
-//  BANDEAU WS2812B
+//  RUBAN WS2812B
 // ═══════════════════════════════════════════════════════════════
-#define LEDS_PER_METER   60    // Permet de définir la densité LED par mètre du ruban   value: [1 - 144]
-#define STRIP_LENGTH_M    5     // Permet de calculer LED_COUNT = densité × longueur (m)   value: [1 - 10]
-#define LED_COUNT         (LEDS_PER_METER * STRIP_LENGTH_M)  // Nombre total LED ; ruban test : remplacer par 17   value: [1 - 600]
-#define LED_PIN           4     // Permet de brancher les données sur ce GPIO (D2 = 4 sur WeMos D1)   value: [0 - 16]
-#define MAX_BRIGHTNESS    80    // Permet de limiter la luminosité globale (économie + yeux)   value: [0 - 255]
+#define LEDS_PER_METER    55
+#define STRIP_LENGTH_M     5
+#define LED_COUNT          (LEDS_PER_METER * STRIP_LENGTH_M)  // test court : mettre 17
+#define LED_PIN            4     // D2 sur WeMos D1
+#define MIN_LEDS_ON        5     // LED allumées minimum au silence   value: [1 - 50]
 
 // ═══════════════════════════════════════════════════════════════
-//  MICRO MAX4466 (entrée A0, peak typique 0-1023)
+//  MICRO — matériel + sensibilité (app : curseur Sensibilité)
 // ═══════════════════════════════════════════════════════════════
-#define MIC_PIN             A0  // Permet de lire le micro sur la broche analogique   value: [A0]
-#define SAMPLE_COUNT        24  // Permet de lisser le peak (24 si Wi-Fi, 64 sans Wi-Fi)   value: [8 - 256]
-#define SAMPLE_DELAY_US     200 // Permet d'espacer chaque lecture analogique (µs)   value: [50 - 1000]
-#define PEAK_SMOOTH_PERCENT 15  // Permet de lisser le peak pour les flashs (évite micro-coupures)   value: [0 - 100]
+#define MIC_PIN              A0
+#define SAMPLE_COUNT         24    // 64 possible sans Wi-Fi   value: [8 - 256]
+#define SAMPLE_DELAY_US      200   // value: [50 - 1000]
+
+#define DEFAULT_SENSITIVITY  8     // Défaut curseur app 0–100   value: [0 - 100]
+
+// ── Cartographie curseur Sensibilité (app) → micro (MicSensor.cpp) ──
+// s = g.live.sensitivity (0 = peu sensible, 100 = très sensible)
+//
+//   micGate     = MIC_SENS_GATE_MAX - s × (MAX - MIN) / 100
+//   micSpan     = MIC_SENS_SPAN_MAX - s × (MAX - MIN) / 100
+//   micDeadband = MIC_SENS_DB_MAX - s × (MAX - MIN) / 100
+//
+//   eff = max(0, raw - micGate)          ← peak utilisé (moniteur : « eff »)
+//   barre % = eff / micSpan              ← hauteur vu-mètre
+//
+// Exemples (raw = variation max-min du micro sur une mesure) :
+//   s=0  → gate 110, span 720 : raw 100 → eff 0 ; raw 200 → barre ~12 %
+//   s=8  → gate 102, span 680 : raw 25  → eff 0 (silence typique)
+//   s=100→ gate 10,  span 220 : raw 50  → eff 40 → barre ~18 %
+//
+#define MIC_SENS_GATE_MIN    10    // Porte (gate) quand s=100 : bruit minimal filtré   value: [0 - 80]
+#define MIC_SENS_GATE_MAX    110   // Porte quand s=0 : ignore davantage le bruit de fond   value: [50 - 200]
+#define MIC_SENS_SPAN_MIN    220   // Peak eff. pour barre 100 % quand s=100 (voix proche)   value: [100 - 400]
+#define MIC_SENS_SPAN_MAX    720   // Peak eff. pour barre 100 % quand s=0 (voix très forte)   value: [400 - 900]
+#define MIC_SENS_DB_MIN      8     // Zone morte barre quand s=100 (montée facile)   value: [0 - 20]
+#define MIC_SENS_DB_MAX      35     // Zone morte quand s=0 (barre stable au silence)   value: [15 - 60]
+// Ne pas confondre avec ADC_FIN_ZONE_VERT / ORANGE (Zone calme / animée sur le ruban).
 
 // ═══════════════════════════════════════════════════════════════
-//  PLAGES ADC → couleurs sur le ruban + seuils flash bleu
-//  (mêmes bornes pour répartition LED et montée vert → orange → rouge)
+//  COULEURS SUR LE RUBAN + FLASHS BLEUS (app : Zone calme / Zone animée)
+//  Peak EFFECTIF (eff) après porte de sensibilité — pas le raw du moniteur série.
+//  Répartition vert|orange|rouge le long du bandeau : proportion de ces seuils.
 // ═══════════════════════════════════════════════════════════════
-#define ADC_PLAGE_MIN       0     // Permet de fixer la borne basse utile du peak   value: [0 - 1022]
-#define ADC_PLAGE_MAX       1023  // Permet de fixer la borne haute utile du peak   value: [1 - 1023]
-#define ADC_FIN_ZONE_VERT   400   // Permet de délimiter la zone VERTE (peak ≤ cette valeur)   value: [0 - 1022]
-#define ADC_FIN_ZONE_ORANGE 700   // Permet de délimiter la zone ORANGE (peak ≤ cette valeur)   value: [ADC_FIN_ZONE_VERT+1 - 1023]
-#define ADC_HYST_VERT       80    // Permet d'éviter le rebond en redescendant depuis orange/rouge vers vert   value: [0 - 500]
-#define ADC_HYST_ORANGE     80    // Permet d'éviter le rebond en redescendant depuis rouge vers orange   value: [0 - 500]
+#define ADC_PLAGE_MIN        0
+#define ADC_PLAGE_MAX        1023
+#define ADC_FIN_ZONE_VERT    400   // = Zone calme (défaut app)   value: [0 - 1022]
+#define ADC_FIN_ZONE_ORANGE  700   // = Zone animée (défaut app)   value: [vert+1 - 1023]
+#define ADC_HYST_VERT        80    // Anti-rebond descente palier   value: [0 - 500]
+#define ADC_HYST_ORANGE      80
 
 // ═══════════════════════════════════════════════════════════════
-//  HAUTEUR DE LA BARRE VU (nombre de LED allumées)
+//  MODE FLASH — VU + flashs bleus (MODE_IMMEDIAT)
 // ═══════════════════════════════════════════════════════════════
-#define MIN_LEDS_ON         5     // Permet d'avoir toujours au moins N LED allumées (bruit de fond visible)   value: [1 - 50]
-#define ADC_VU_MIN          5     // Permet de traiter les peak en dessous comme silence (barre au minimum)   value: [0 - 100]
-#define USE_AUTO_VU_MAX     1     // Permet de calibrer automatiquement la barre pleine au boot (1=oui, 0=non)   value: [0 - 1]
-#define CALIBRATE_MS        2500UL // Permet de régler la durée d'écoute du silence au boot (ms)   value: [500 - 30000]
-#define CAL_VU_MARGIN       200   // Permet d'ajouter une marge au bruit de fond pour définir « barre pleine »   value: [50 - 500]
-#define MANUAL_VU_MAX       0     // Permet de forcer le peak « barre pleine » ; 0 = utilise la calibration auto   value: [0 - 1023]
+#define MAX_BRIGHTNESS           100    // = Luminosité app (mode Flash)   value: [0 - 255]
+#define ATTACK_PERCENT           8    // = Montée barre app (mode Flash)   value: [0 - 100]
+#define AVG_SMOOTH_PERCENT       30    // Lissage moyenne peak   value: [0 - 100]
+#define PEAK_SMOOTH_PERCENT      10    // Lissage paliers / flash   value: [0 - 100]
+#define DESCENT_DELAY_SEC        1    // Attente avant descente barre   value: [0 - 120]
+#define DESCENT_DURATION_SEC     4    // Durée pour vider la barre   value: [1 - 600]
+
+#define STATE_HOLD_MS            450   // Maintien seuil avant flash   value: [0 - 5000]
+#define FLASH_HOLD_RESET_MS      400   // value: [0 - 5000]
+#define TRANSITION_COOLDOWN_SEC  3     // Entre deux séries de flashs   value: [0 - 10]
+#define FLASH_COUNT              3     // value: [1 - 20]
+#define FLASH_ON_MS              120   // value: [20 - 2000]
+#define FLASH_OFF_MS             120   // value: [20 - 2000]
+
+#define BOOT_BLUE_MS             800   // Bleu au boot   value: [0 - 10000]
+#define BOOT_VU_SPEED_PERCENT    75    // Animation VU boot   value: [5 - 100]
 
 // ═══════════════════════════════════════════════════════════════
-//  MONTÉE / DESCENTE DE LA BARRE (réglages en % ou secondes)
+//  MODE STANDARD — VU adouci, sans flash (MODE_LENT)
+//  Mêmes idées que Flash, valeurs plus calmes (préfixe LENT_).
 // ═══════════════════════════════════════════════════════════════
-#define ATTACK_PERCENT          45  // Permet de régler la rapidité de montée de la barre (100 = quasi instantané)   value: [0 - 100]
-#define AVG_SMOOTH_PERCENT      8   // Permet de lisser la moyenne du peak (déclenche la descente)   value: [0 - 100]
-#define DESCENT_DELAY_SEC       5   // Permet d'attendre N secondes sous la moyenne avant que la barre redescende   value: [0 - 120]
-#define DESCENT_DURATION_SEC    67  // Permet de vider la barre en N secondes après ce délai   value: [1 - 600]
+#define LENT_MAX_BRIGHTNESS          50    // Luminosité app (mode Standard)
+#define LENT_ATTACK_PERCENT          8     // Montée barre app (mode Standard)
+#define LENT_AVG_SMOOTH_PERCENT      35
+#define LENT_PEAK_SMOOTH_PERCENT     50
+#define LENT_DESCENT_DELAY_SEC       6
+#define LENT_DESCENT_DURATION_SEC    60
+#define LENT_BOOT_BLUE_MS            0     // 0 = pas de bleu au boot
+#define LENT_BOOT_VU_SPEED_PERCENT   20
 
 // ═══════════════════════════════════════════════════════════════
-//  FLASH BLEU (montée d'état vert → orange → rouge, un cran à la fois)
+//  MÉDITATION GUIDÉE — séances 2 / 5 / 10 min (réglé dans l'app, pas ici)
 // ═══════════════════════════════════════════════════════════════
-#define STATE_HOLD_MS           200 // Permet d'exiger un maintien au-dessus du seuil avant de lancer un flash (ms)   value: [0 - 5000]
-#define FLASH_HOLD_RESET_MS     400 // Permet d'ignorer les micro-coupures sous le seuil sans reset du timer flash   value: [0 - 5000]
-#define TRANSITION_COOLDOWN_SEC 3   // Permet d'espacer deux séries de flashs bleus (secondes)   value: [0 - 10]
-#define FLASH_COUNT             3   // Permet de choisir le nombre de flashs bleus par montée d'état   value: [1 - 20]
-#define FLASH_ON_MS             120 // Permet de régler la durée d'allumage bleu de chaque impulsion (ms)   value: [20 - 2000]
-#define FLASH_OFF_MS            120 // Permet de régler la durée d'extinction entre deux impulsions (ms)   value: [20 - 2000]
+#define MEDIT_COUNTDOWN_SEC      5
+#define MEDIT_DUR_2MIN_SEC       120
+#define MEDIT_DUR_5MIN_SEC       300
+#define MEDIT_DUR_10MIN_SEC      600
+// Profil 2 min
+#define MEDIT_P0_INSPIRE_SEC     4
+#define MEDIT_P0_HOLD_SEC        2
+#define MEDIT_P0_EXPIRE_SEC      5
+#define MEDIT_P0_HOLD_EMPTY_SEC  2
+#define MEDIT_P0_PAUSE_SEC       1
+// Profil 5 min
+#define MEDIT_P1_INSPIRE_SEC     5
+#define MEDIT_P1_HOLD_SEC        3
+#define MEDIT_P1_EXPIRE_SEC      6
+#define MEDIT_P1_HOLD_EMPTY_SEC  2
+#define MEDIT_P1_PAUSE_SEC       1
+// Profil 10 min
+#define MEDIT_P2_INSPIRE_SEC     6
+#define MEDIT_P2_HOLD_SEC        4
+#define MEDIT_P2_EXPIRE_SEC      7
+#define MEDIT_P2_HOLD_EMPTY_SEC  3
+#define MEDIT_P2_PAUSE_SEC       2
+// Couleurs respiration (GRB)
+#define MEDIT_COLOR_IN_R         0
+#define MEDIT_COLOR_IN_G         200
+#define MEDIT_COLOR_IN_B         255
+#define MEDIT_COLOR_HOLD_R       255
+#define MEDIT_COLOR_HOLD_G       160
+#define MEDIT_COLOR_HOLD_B       0
+#define MEDIT_COLOR_OUT_R        255
+#define MEDIT_COLOR_OUT_G        0
+#define MEDIT_COLOR_OUT_B        180
+#define MEDIT_COLOR_EMPTY_R      220
+#define MEDIT_COLOR_EMPTY_G      220
+#define MEDIT_COLOR_EMPTY_B      255
+#define MEDIT_COLOR_DONE_R       0
+#define MEDIT_COLOR_DONE_G       180
+#define MEDIT_COLOR_DONE_B       80
 
 // ═══════════════════════════════════════════════════════════════
-//  MODE LENT — VU adouci, sans flash bleu (MODE_ACTIF == MODE_LENT)
+//  WI-FI — réseau Cantaluz (téléphone)
 // ═══════════════════════════════════════════════════════════════
-#define LENT_ATTACK_PERCENT          12  // Permet de ralentir la montée de la barre   value: [0 - 100]
-#define LENT_AVG_SMOOTH_PERCENT      25  // Permet de stabiliser la moyenne (descente plus tardive)   value: [0 - 100]
-#define LENT_PEAK_SMOOTH_PERCENT     40  // Permet de lisser fortement les variations de peak   value: [0 - 100]
-#define LENT_DESCENT_DELAY_SEC       10  // Permet d'attendre plus longtemps avant la descente   value: [0 - 120]
-#define LENT_DESCENT_DURATION_SEC      120 // Permet de vider la barre lentement (ex. 120 ≈ 2 min)   value: [1 - 600]
-#define LENT_MAX_BRIGHTNESS          50  // Permet de limiter la luminosité en mode calme   value: [0 - 255]
-#define LENT_BOOT_BLUE_MS            0   // Permet d'afficher le bleu au boot ; 0 = désactivé   value: [0 - 10000]
-#define LENT_BOOT_VU_SPEED_PERCENT   20  // Permet de ralentir l'animation VU au boot   value: [5 - 100]
+#define WIFI_ENABLE            1
+#define WIFI_OPEN_NETWORK      0
+#define WIFI_AP_SSID           "Cantaluz"
+#define WIFI_AP_PASS           "cantaluz1"
+#define WIFI_AP_CHANNEL        6     // value: [1 - 13]
+#define WIFI_HTTP_PORT         80
+#define WIFI_MDNS_NAME         "cantaluz"
+#define WIFI_CAPTIVE_PORTAL    1
 
 // ═══════════════════════════════════════════════════════════════
-//  BOOT (séquence au démarrage) — mode immédiat
+//  DEBUG — garder commenté avec Wi-Fi / usage téléphone
 // ═══════════════════════════════════════════════════════════════
-#define BOOT_BLUE_MS            800 // Permet d'afficher le ruban entièrement bleu juste après l'init (ms)   value: [0 - 10000]
-#define BOOT_VU_SPEED_PERCENT   75  // Permet de régler la vitesse de l'animation VU verte au boot (100=rapide)   value: [5 - 100]
-
-// ═══════════════════════════════════════════════════════════════
-//  WIFI — point d'accès pour le téléphone (ESP8266 intégré)
-// ═══════════════════════════════════════════════════════════════
-#define WIFI_ENABLE           1       // Permet d'activer le réseau Cantaluz (1=oui, 0=non)   value: [0 - 1]
-#define WIFI_OPEN_NETWORK     0       // 0 = WPA (comme Cantaluz_TEST) ; 1 = réseau ouvert   value: [0 - 1]
-#define WIFI_AP_SSID          "Cantaluz"  // Nom du réseau Wi-Fi créé par la carte (max 31 car.)
-#define WIFI_AP_PASS          "cantaluz1" // Mot de passe WPA (8 car. min.)
-#define WIFI_AP_CHANNEL       6       // Canal Wi-Fi 1-13 (essayer 6 ou 11 si invisible)   value: [1 - 13]
-#define WIFI_HTTP_PORT        80      // Port de la page web   value: [80 - 8080]
-#define WIFI_MDNS_NAME        "cantaluz"  // Nom local : http://cantaluz.local (mDNS)
-#define WIFI_CAPTIVE_PORTAL   1       // 1 = ouvre la page auto à la connexion Wi-Fi   value: [0 - 1]
-
-// ═══════════════════════════════════════════════════════════════
-//  DEBUG SÉRIE (moniteur série)
-//  ATTENTION : avec Wi-Fi actif, le debug bloque la radio ESP8266.
-//  Garder DEBUG_SERIAL commenté en usage normal (téléphone).
-// ═══════════════════════════════════════════════════════════════
-#define DEBUG_SERIAL                  // Décommenter seulement pour diagnostiquer sans Wi-Fi
-#define SERIAL_BAUD             115200 // Permet de régler la vitesse du port série   value: [9600 - 921600]
-#define DEBUG_INTERVAL_MS       5000  // Si debug actif : intervalle long pour ne pas couper le Wi-Fi   value: [1000 - 30000]
-#define LOOP_MIN_PERIOD_MS      25    // Pause min. entre 2 boucles (laisse respirer le Wi-Fi)   value: [10 - 100]
+//#define DEBUG_SERIAL
+#define SERIAL_BAUD            115200
+#define DEBUG_INTERVAL_MS      5000
+#define LOOP_MIN_PERIOD_MS     25

@@ -22,13 +22,42 @@
 #include "Config.h"
 #include "Types.h"
 
+// Phases de la respiration guidée (mode Méditation)
+enum MedPhase : uint8_t {
+  MED_IDLE = 0,
+  MED_COUNTDOWN,
+  MED_INSPIRE,
+  MED_HOLD,        // Retiens (poumons pleins, après inspire)
+  MED_EXPIRE,
+  MED_HOLD_EMPTY,  // Air bloqué (poumons vides, après expire)
+  MED_PAUSE,
+  MED_DONE
+};
+
+// État d'une séance Méditation guidée (API web + ModeMeditation.cpp)
+struct MeditationState {
+  uint8_t durProfile;           // 0 = 2 min, 1 = 5 min, 2 = 10 min
+  uint32_t sessionDurMs;        // Durée totale choisie (ms)
+  MedPhase phase;
+  bool countdownActive;
+  bool sessionActive;
+  unsigned long countdownStartMs;
+  unsigned long sessionStartMs;
+  unsigned long phaseStartMs;
+  unsigned long nextLedStepMs;
+  int cycleLedIndex;            // Prochaine LED à allumer (0 .. LED_COUNT)
+  int phaseEndLed;              // Fin de segment pour la phase courante
+  uint16_t msPerLed;            // Délai entre deux LED dans la phase courante
+};
+
 // Réglages modifiables en live (Config.h au boot, puis page web /api/settings)
 struct LiveConfig {
-  uint8_t activeMode;     // MODE_IMMEDIAT ou MODE_LENT (modifiable via l'app web)
+  uint8_t activeMode;     // MODE_IMMEDIAT, MODE_LENT ou MODE_MEDITATION (app web)
   int adcFinZoneVert;     // Seuil fin zone verte (peak ADC)
   int adcFinZoneOrange;   // Seuil fin zone orange (peak ADC)
   uint8_t maxBrightness;  // Luminosité ruban 0-255
   uint8_t attackPercent;  // Vitesse montée barre VU (%)
+  uint8_t sensitivity;  // Sensibilité micro 0-100 (app Réglages)
 };
 
 // Valeurs calculées depuis Config.h (% et secondes) — remplies par configApply()
@@ -48,6 +77,7 @@ struct AppState {
 
   LiveConfig live;               // Réglages temps réel (web + Config.h au démarrage)
   RuntimeConfig run;             // Paramètres convertis (voir ci-dessus)
+  MeditationState med;           // Séance Méditation guidée
 
   int lastPeak;                  // Dernier peak micro (pour API web)
   int lastMicAvg;                // Dernière moyenne micro (pour API web)
@@ -79,6 +109,10 @@ struct AppState {
   unsigned long lastLoopMs;            // Horodatage boucle (calcul dt)
   unsigned long lastDebugMs;           // Horodatage dernier log série
   unsigned long belowZoneSinceMs;      // Anti reset timer sur micro-coupure sous seuil
+
+  int micGate;                       // Porte bruit (depuis sensibilité)
+  int micSpan;                       // Peak effectif pour barre à 100 %
+  int micDeadband;                   // Zone morte barre VU
 };
 
 extern AppState g;  // Instance unique — toute la mémoire « vivante » du projet
@@ -101,5 +135,5 @@ void liveApplyAttackRate();
 // Permet de restaurer tous les réglages par défaut (Config.h, garde le mode actuel)
 void liveConfigResetDefaults();
 
-// Permet de restaurer un seul réglage : "vert", "orange", "bright", "attack"
+// Permet de restaurer un seul réglage : "vert", "orange", "bright", "attack", "sens"
 void liveResetField(const char *field);

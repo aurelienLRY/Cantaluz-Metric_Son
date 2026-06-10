@@ -9,7 +9,7 @@
  *   modesLoop()   →  à chaque tour (loop Arduino)
  *
  * Le mode réel est choisi dans Config.h (MODE_ACTIF).
- * Modes : MODE_IMMEDIAT (ModeImmediat.cpp), MODE_LENT (ModeLent.cpp).
+ * Modes : MODE_IMMEDIAT (Flash), MODE_LENT (Standard), MODE_MEDITATION (Méditation guidée).
  *
  * Ajouter un nouveau mode :
  *   1. BruitLedMode dans Types.h
@@ -26,5 +26,5 @@ void modesSetup();
 // Permet d'exécuter une boucle du mode actif
 void modesLoop();
 
-// Permet de changer le mode en cours d'exécution (MODE_IMMEDIAT ou MODE_LENT)
+// Permet de changer le mode en cours d'exécution
 void modesSetActive(uint8_t mode);

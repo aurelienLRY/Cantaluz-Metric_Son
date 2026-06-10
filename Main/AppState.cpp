@@ -1,15 +1,12 @@
 /*
  * AppState.cpp — Définition de la variable globale g et configApply()
- *
- * Contient :
- *   - g          : état global (voir AppState.h)
- *   - stateName  : noms français des paliers pour le debug
- *   - configApply: lit Config.h et remplit g.run via Convert.h
  */
 
 #include "AppState.h"
 #include "Convert.h"
 #include "Config.h"
+#include "MicSensor.h"
+#include "LedStrip.h"
 #include <string.h>
 
 AppState g;
@@ -25,8 +22,10 @@ void liveConfigInit() {
 #endif
   g.live.adcFinZoneVert = ADC_FIN_ZONE_VERT;
   g.live.adcFinZoneOrange = ADC_FIN_ZONE_ORANGE;
+  g.live.sensitivity = DEFAULT_SENSITIVITY;
   g.lastPeak = 0;
   g.lastMicAvg = 0;
+  micApplySensitivity();
 }
 
 void liveApplyAttackRate() {
@@ -47,8 +46,10 @@ void liveConfigResetDefaults() {
   uint8_t prevMode = g.live.activeMode;
   g.live.adcFinZoneVert = ADC_FIN_ZONE_VERT;
   g.live.adcFinZoneOrange = ADC_FIN_ZONE_ORANGE;
+  g.live.sensitivity = DEFAULT_SENSITIVITY;
   liveLoadBrightnessAttackForMode();
   g.live.activeMode = prevMode;
+  micApplySensitivity();
   if (prevMode == MODE_LENT) {
     configApplyLent();
   } else {
@@ -72,6 +73,9 @@ void liveResetField(const char *field) {
     g.live.attackPercent = (g.live.activeMode == MODE_LENT)
       ? LENT_ATTACK_PERCENT : ATTACK_PERCENT;
     liveApplyAttackRate();
+  } else if (strcmp(field, "sens") == 0 || strcmp(field, "sensitivity") == 0) {
+    g.live.sensitivity = DEFAULT_SENSITIVITY;
+    micApplySensitivity();
   }
   if (g.live.adcFinZoneOrange <= g.live.adcFinZoneVert) {
     g.live.adcFinZoneOrange = g.live.adcFinZoneVert + 1;

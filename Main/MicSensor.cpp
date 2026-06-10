@@ -1,15 +1,40 @@
 /*
- * MicSensor.cpp — Implémentation lecture micro et niveau VU
- *
- * Flux typique (chaque boucle) :
- *   micSample → micUpdatePeakSmooth → micUpdateDisplayLevel
- * FlashEtat utilise en plus micPeakEffectifPourFlash.
+ * MicSensor.cpp — Lecture micro et niveau VU (sensibilité via l'app)
  */
 
 #include "MicSensor.h"
 #include "AppState.h"
 #include "Config.h"
 #include "LedStrip.h"
+
+void micApplySensitivity() {
+  uint8_t s = g.live.sensitivity;
+  if (s > 100) s = 100;
+
+  g.micGate = MIC_SENS_GATE_MAX
+    - ((int)s * (MIC_SENS_GATE_MAX - MIC_SENS_GATE_MIN)) / 100;
+  g.micSpan = MIC_SENS_SPAN_MAX
+    - ((int)s * (MIC_SENS_SPAN_MAX - MIC_SENS_SPAN_MIN)) / 100;
+  g.micDeadband = MIC_SENS_DB_MAX
+    - ((int)s * (MIC_SENS_DB_MAX - MIC_SENS_DB_MIN)) / 100;
+
+  if (g.micSpan < 80) g.micSpan = 80;
+  g.vuMaxPeak = g.micSpan;
+}
+
+void micInitVuFromSettings() {
+  micApplySensitivity();
+  g.peakAverage = 0.0f;
+  g.peakSmooth = 0.0f;
+  g.displayLevel = (float)MIN_LEDS_ON / (float)LED_COUNT;
+  g.belowAvgSinceMs = 0;
+}
+
+int micPeakEffective(int rawPeak) {
+  int p = rawPeak - g.micGate;
+  if (p < 0) p = 0;
+  return p;
+}
 
 void micSample(MicSample &out) {
   uint32_t sum = 0;
@@ -46,23 +71,31 @@ int micPeakEffectifPourFlash(int peak) {
 }
 
 float micPeakToLevel(int peak) {
-  float level = (float)(peak - ADC_VU_MIN) / (float)(g.vuMaxPeak - ADC_VU_MIN);
+  int span = g.micSpan;
+  if (span < 60) span = 60;
+
+  float level = (float)peak / (float)span;
   if (level < 0.0f) level = 0.0f;
   if (level > 1.0f) level = 1.0f;
   return level;
 }
 
 void micUpdateDisplayLevel(int peak, float dtSec) {
+  if (peak <= g.micDeadband) {
+    peak = 0;
+  }
+
   g.peakAverage += ((float)peak - g.peakAverage) * g.run.avgSmooth;
   float target = micPeakToLevel(peak);
   unsigned long now = millis();
+  float dbHalf = (float)g.micDeadband * 0.5f;
 
-  if ((float)peak >= g.peakAverage) {
+  if ((float)peak > g.peakAverage + dbHalf) {
     g.belowAvgSinceMs = 0;
     if (target > g.displayLevel) {
       g.displayLevel += (target - g.displayLevel) * g.run.attackRate;
     } else {
-      g.displayLevel += (target - g.displayLevel) * (g.run.attackRate * 0.5f);
+      g.displayLevel += (target - g.displayLevel) * (g.run.attackRate * 0.35f);
     }
   } else {
     if (g.belowAvgSinceMs == 0) g.belowAvgSinceMs = now;
@@ -75,39 +108,4 @@ void micUpdateDisplayLevel(int peak, float dtSec) {
   float minLevel = (float)MIN_LEDS_ON / (float)LED_COUNT;
   if (g.displayLevel < minLevel) g.displayLevel = minLevel;
   if (g.displayLevel > 1.0f) g.displayLevel = 1.0f;
-}
-
-void micCalibrateVuMax() {
-  int ambientMax = 0;
-  unsigned long endMs = millis() + CALIBRATE_MS;
-
-#ifdef DEBUG_SERIAL
-  Serial.println(F("Calibration silence (barre pleine)..."));
-#endif
-
-  while (millis() < endMs) {
-    MicSample m;
-    micSample(m);
-    if (m.peak > ambientMax) ambientMax = m.peak;
-    ledRenderVuMeter((float)MIN_LEDS_ON / (float)LED_COUNT);
-    delay(15);
-    yield();
-    ESP.wdtFeed();
-  }
-
-  if (ambientMax < 8) ambientMax = 40;
-
-  g.vuMaxPeak = ambientMax + CAL_VU_MARGIN;
-  if (MANUAL_VU_MAX > 0) g.vuMaxPeak = MANUAL_VU_MAX;
-  if (g.vuMaxPeak < 120) g.vuMaxPeak = 120;
-
-  g.peakAverage = (float)ambientMax;
-  g.peakSmooth = (float)ambientMax;
-
-#ifdef DEBUG_SERIAL
-  Serial.print(F("Bruit fond peak="));
-  Serial.println(ambientMax);
-  Serial.print(F("Barre pleine si peak>="));
-  Serial.println(g.vuMaxPeak);
-#endif
 }

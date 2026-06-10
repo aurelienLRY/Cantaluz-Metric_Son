@@ -13,7 +13,7 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
 | **Carte** | WeMos D1 R1 / R2 / mini (ESP8266) |
 | **Micro** | MAX4466 (GY) sur **A0** |
 | **LED** | Ruban WS2812B sur **D2** (GPIO4) |
-| **Modes** | **Flash** (pics → flashs bleus) ou **Standard** (vu-mètre fluide, sans flash) — commutable depuis l’app |
+| **Modes** | **Flash**, **Standard**, **Méditation guidée** (respiration sur le ruban) |
 | **Réglages** | `Main/Config.h` au boot ; seuils et luminosité aussi via l’app web (jusqu’au redémarrage) |
 | **Wi-Fi** | `Cantaluz` / `cantaluz1` → `http://cantaluz.local` ou `192.168.4.1` (portail captif) |
 
@@ -62,7 +62,8 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
    - Se connecter au Wi-Fi **`Cantaluz`** (mot de passe : `cantaluz1`).
    - L’**app** s’ouvre via le portail captif, ou ouvrir **Chrome** sur `http://cantaluz.local` / `192.168.4.1`.
    - Slogan : *« Outil d’accompagnement au calme. »*
-   - **Dashboard** : graphique d’ambiance (30 s), barre VU, choix du mode **Flash** ou **Standard**.
+   - **Dashboard** : graphique d’ambiance (30 s), barre VU, choix du mode **Flash**, **Standard** ou **Méditation guidée**.
+   - **Méditation guidée** : choisir **2 / 5 / 10 min**, bouton **Démarrer** → compte à rebours 5 s puis chrono ; phases Inspire / Retiens / Expire sur le ruban (LED une par une).
    - **Réglages** : zone calme, zone animée, luminosité, montée de la barre ; bouton **↺** = valeur par défaut (`Config.h`) ; **i** = bulle d’aide.
    - Les réglages web s’appliquent tout de suite sur le ruban ; au **redémarrage** de la carte, c’est `Config.h` qui reprend la main.
    - **Ne pas** laisser le moniteur série ouvert en usage normal (sature l’ESP8266).
@@ -116,7 +117,7 @@ Cantaluz/
     ├── AppState.*            ← état global + LiveConfig (web)
     ├── Modes.*               ← dispatch Flash / Standard
     ├── ModeImmediat.*        ← mode Flash (VU + flash bleu)
-    ├── ModeLent.*            ← mode Standard (VU adouci)
+    ├── ModeMeditation.*      ← mode Méditation guidée (respiration)
     ├── MicSensor.*           ← micro + barre VU
     ├── LedStrip.*            ← ruban WS2812B
     ├── FlashEtat.*           ← flashs bleus (mode Flash)
@@ -134,10 +135,11 @@ WifiMinimal/                  ← test Wi-Fi matériel seul (Cantaluz_TEST)
 |-------------------|----------|--------------|
 | **Flash** | `MODE_IMMEDIAT` | VU réactif ; montée vert → orange → rouge → **flashs bleus** |
 | **Standard** | `MODE_LENT` | Vu-mètre fluide selon l’ambiance ; **pas de flash** ; paramètres `LENT_*` |
+| **Méditation guidée** | `MODE_MEDITATION` | Séance respiration : **cyan** inspire → **ambre** retiens → **magenta** expire ; micro ignoré |
 
 Commun aux deux modes :
 
-1. **Boot** — ruban bleu, animation VU verte, calibration du silence.
+1. **Boot** — ruban bleu, animation VU verte (sans attente silence).
 2. **Barre VU** — hauteur selon le volume ; descente après quelques secondes sous la moyenne.
 3. **Couleurs sur le ruban** — réparties selon les plages ADC (`ADC_FIN_ZONE_VERT`, `ADC_FIN_ZONE_ORANGE`).
 

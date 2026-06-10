@@ -46,7 +46,9 @@ void setup() {
 #ifdef DEBUG_SERIAL
   Serial.println(F("=== Cantaluz ==="));
 #if MODE_ACTIF == MODE_LENT
-  Serial.println(F("Mode: LENT (dòç)"));
+  Serial.println(F("Mode: LENT (Standard)"));
+#elif MODE_ACTIF == MODE_MEDITATION
+  Serial.println(F("Mode: MEDITATION GUIDEE"));
 #elif MODE_ACTIF == MODE_IMMEDIAT
   Serial.println(F("Mode: IMMEDIAT"));
 #else

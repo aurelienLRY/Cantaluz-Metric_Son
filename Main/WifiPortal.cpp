@@ -15,6 +15,8 @@
 #include "AppState.h"
 #include "LedStrip.h"
 #include "Modes.h"
+#include "ModeMeditation.h"
+#include "MicSensor.h"
 #include "WebAppHtml.h"
 
 static ESP8266WebServer server(WIFI_HTTP_PORT);
@@ -89,9 +91,18 @@ static void wifiApplySettingsFromRequest() {
       liveApplyAttackRate();
     }
   }
+  if (server.hasArg("sens") || server.hasArg("sensitivity")) {
+    int v = server.hasArg("sens")
+      ? server.arg("sens").toInt()
+      : server.arg("sensitivity").toInt();
+    if (v >= 0 && v <= 100) {
+      g.live.sensitivity = (uint8_t)v;
+      micApplySensitivity();
+    }
+  }
   if (server.hasArg("mode")) {
     int m = server.arg("mode").toInt();
-    if (m == MODE_IMMEDIAT || m == MODE_LENT) {
+    if (m == MODE_IMMEDIAT || m == MODE_LENT || m == MODE_MEDITATION) {
       modesSetActive((uint8_t)m);
     }
   }
@@ -99,7 +110,9 @@ static void wifiApplySettingsFromRequest() {
 }
 
 static const char *wifiModeLabel(uint8_t mode) {
-  return (mode == MODE_LENT) ? "Standard" : "Flash";
+  if (mode == MODE_LENT) return "Standard";
+  if (mode == MODE_MEDITATION) return "Méditation guidée";
+  return "Flash";
 }
 
 static const char *wifiStateLabel(ColorState s) {
@@ -117,14 +130,15 @@ static void handleReset() {
     f.toLowerCase();
     liveResetField(f.c_str());
     wifiApplyToHardware();
-    char buf[160];
+    char buf[200];
     snprintf(buf, sizeof(buf),
-      "{\"ok\":true,\"field\":\"%s\",\"vert\":%d,\"orange\":%d,\"brightness\":%u,\"attack\":%u}",
+      "{\"ok\":true,\"field\":\"%s\",\"vert\":%d,\"orange\":%d,\"brightness\":%u,\"attack\":%u,\"sensitivity\":%u}",
       f.c_str(),
       g.live.adcFinZoneVert,
       g.live.adcFinZoneOrange,
       (unsigned)g.live.maxBrightness,
-      (unsigned)g.live.attackPercent);
+      (unsigned)g.live.attackPercent,
+      (unsigned)g.live.sensitivity);
     server.send(200, F("application/json"), buf);
     return;
   }
@@ -213,32 +227,67 @@ static void wifiPortalStartDnsMdns() {
   }
 }
 
+static void handleMeditationStart() {
+  if (g.live.activeMode != MODE_MEDITATION) {
+    server.send(400, F("application/json"), F("{\"ok\":false,\"err\":\"mode\"}"));
+    return;
+  }
+  uint16_t dur = MEDIT_DUR_5MIN_SEC;
+  if (server.hasArg("dur")) {
+    dur = (uint16_t)server.arg("dur").toInt();
+  }
+  if (dur != MEDIT_DUR_2MIN_SEC && dur != MEDIT_DUR_5MIN_SEC && dur != MEDIT_DUR_10MIN_SEC) {
+    dur = MEDIT_DUR_5MIN_SEC;
+  }
+  meditationStart(dur);
+  char buf[128];
+  snprintf(buf, sizeof(buf),
+    "{\"ok\":true,\"dur\":%u,\"countdown\":%u}",
+    (unsigned)dur, (unsigned)MEDIT_COUNTDOWN_SEC);
+  server.send(200, F("application/json"), buf);
+}
+
+static void handleMeditationStop() {
+  meditationStop();
+  server.send(200, F("application/json"), F("{\"ok\":true}"));
+}
+
 static void handleStatus() {
   IPAddress ip = WiFi.softAPIP();
-  char buf[520];
+  char buf[780];
   int displayPct = (int)(g.displayLevel * 100.0f + 0.5f);
   snprintf(buf, sizeof(buf),
     "{\"niveau\":%d,\"barre\":%d,\"display\":%.3f,"
-    "\"couleur\":\"%s\",\"calibration\":%d,"
-    "\"vert\":%d,\"orange\":%d,\"brightness\":%u,\"attack\":%u,"
-    "\"defVert\":%d,\"defOrange\":%d,\"defBright\":%u,\"defAttack\":%u,"
+    "\"couleur\":\"%s\","
+    "\"vert\":%d,\"orange\":%d,\"brightness\":%u,\"attack\":%u,\"sensitivity\":%u,"
+    "\"defVert\":%d,\"defOrange\":%d,\"defBright\":%u,\"defAttack\":%u,\"defSens\":%u,"
     "\"mode\":%u,\"modeName\":\"%s\","
+    "\"medPhase\":\"%s\",\"medCountdown\":%u,\"medElapsed\":%lu,\"medRemain\":%lu,"
+    "\"medDur\":%lu,\"medRunning\":%s,\"medCounting\":%s,"
     "\"ip\":\"%u.%u.%u.%u\",\"host\":\"%s.local\",\"ssid\":\"%s\"}",
     displayPct,
     displayPct,
     g.displayLevel,
     wifiStateLabel(g.currentState),
-    g.vuMaxPeak,
     g.live.adcFinZoneVert,
     g.live.adcFinZoneOrange,
     (unsigned)g.live.maxBrightness,
     (unsigned)g.live.attackPercent,
+    (unsigned)g.live.sensitivity,
     ADC_FIN_ZONE_VERT,
     ADC_FIN_ZONE_ORANGE,
     (unsigned)(g.live.activeMode == MODE_LENT ? LENT_MAX_BRIGHTNESS : MAX_BRIGHTNESS),
     (unsigned)(g.live.activeMode == MODE_LENT ? LENT_ATTACK_PERCENT : ATTACK_PERCENT),
+    (unsigned)DEFAULT_SENSITIVITY,
     (unsigned)g.live.activeMode,
     wifiModeLabel(g.live.activeMode),
+    meditationPhaseLabel(g.med.phase),
+    (unsigned)meditationCountdownRemainSec(),
+    (unsigned long)meditationSessionElapsedSec(),
+    (unsigned long)meditationSessionRemainSec(),
+    (unsigned long)(g.med.sessionDurMs / 1000UL),
+    g.med.sessionActive ? "true" : "false",
+    g.med.countdownActive ? "true" : "false",
     ip[0], ip[1], ip[2], ip[3],
     WIFI_MDNS_NAME,
     WIFI_AP_SSID);
@@ -247,13 +296,14 @@ static void handleStatus() {
 
 static void handleSettings() {
   wifiApplySettingsFromRequest();
-  char buf[200];
+  char buf[240];
   snprintf(buf, sizeof(buf),
-    "{\"ok\":true,\"vert\":%d,\"orange\":%d,\"brightness\":%u,\"attack\":%u,\"mode\":%u}",
+    "{\"ok\":true,\"vert\":%d,\"orange\":%d,\"brightness\":%u,\"attack\":%u,\"sensitivity\":%u,\"mode\":%u}",
     g.live.adcFinZoneVert,
     g.live.adcFinZoneOrange,
     (unsigned)g.live.maxBrightness,
     (unsigned)g.live.attackPercent,
+    (unsigned)g.live.sensitivity,
     (unsigned)g.live.activeMode);
   server.send(200, F("application/json"), buf);
 }
@@ -361,6 +411,8 @@ void wifiPortalStartWeb() {
   server.on("/api/status", handleStatus);
   server.on("/api/settings", handleSettings);
   server.on("/api/reset", handleReset);
+  server.on("/api/meditation/start", handleMeditationStart);
+  server.on("/api/meditation/stop", handleMeditationStop);
 
 #if WIFI_CAPTIVE_PORTAL
   wifiRegisterCaptiveRoutes();

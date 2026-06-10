@@ -17,6 +17,7 @@
 |---------|------------|---------|--------------|
 | **Flash** | `MODE_IMMEDIAT` (0) | `ModeImmediat.cpp` | VU réactif + flashs bleus sur les pics |
 | **Standard** | `MODE_LENT` (1) | `ModeLent.cpp` | Vu-mètre adouci, **sans flash**, réglages `LENT_*` |
+| **Méditation guidée** | `MODE_MEDITATION` (2) | `ModeMeditation.cpp` | Respiration guidée ; micro ignoré pendant la séance |
 
 - **Au boot** : le mode initial est **`MODE_ACTIF`** dans `Config.h`.
 - **En cours d’exécution** : l’app web change `g.live.activeMode` (`Modes.cpp` → `modesSetActive()`).
@@ -26,16 +27,19 @@
 
 | Onglet | Contenu |
 |--------|---------|
-| **Dashboard** | Graphique ambiance 30 s, barre VU, boutons Flash / Standard |
-| **Réglages** | Zone calme (`ADC_FIN_ZONE_VERT`), zone animée (`ADC_FIN_ZONE_ORANGE`), luminosité, montée barre |
+| **Dashboard** | Graphique ambiance 30 s, barre VU, modes Flash / Standard / Méditation guidée |
+| **Méditation guidée** | Durée 2 / 5 / 10 min, Démarrer, compte à rebours, chrono, phases |
+| **Réglages** | Zone calme, zone animée, luminosité, montée barre (grisés en méditation) |
 
 | Route API | Rôle |
 |-----------|------|
-| `GET /api/status` | Niveau sonore, barre, mode, seuils courants |
-| `GET /api/settings?vert=&orange=&bright=&attack=&mode=` | Applique et renvoie la config live |
-| `GET /api/reset?field=vert\|orange\|bright\|attack` | Restaure un paramètre depuis `Config.h` |
+| `GET /api/status` | Niveau sonore, barre, mode, état méditation |
+| `GET /api/settings?...&mode=` | Applique config live (`mode` 0 / 1 / 2) |
+| `GET /api/reset?field=...` | Restaure un paramètre depuis `Config.h` |
+| `GET /api/meditation/start?dur=120\|300\|600` | Compte à rebours puis séance |
+| `GET /api/meditation/stop` | Arrête la séance |
 
-Réglages live stockés dans **`LiveConfig`** (`AppState.h`) : `activeMode`, `adcFinZoneVert`, `adcFinZoneOrange`, `maxBrightness`, `attackPercent`.
+Réglages live : `activeMode`, seuils vert/orange, luminosité, montée barre, **sensibilité** (`sensitivity` 0–100).
 
 ## Rappel du principe (mode Flash)
 
@@ -50,20 +54,67 @@ Le mode **Standard** reprend la même barre VU et les mêmes zones couleur, sans
 Utilisés quand le mode **Standard** est actif (`MODE_LENT` / app web) :  
 `LENT_ATTACK_PERCENT`, `LENT_DESCENT_DURATION_SEC`, `LENT_MAX_BRIGHTNESS`, `LENT_BOOT_BLUE_MS` (0 = pas de bleu au boot), etc.
 
-## Sections Config.h
+## Config.h — une seule source, pas de doublons inutiles
 
-| Section | Exemples |
-|---------|----------|
-| Mode | `MODE_ACTIF`, `MODE_IMMEDIAT`, `MODE_LENT` |
-| Bandeau | `LED_COUNT`, `MAX_BRIGHTNESS`, `LED_PIN` |
-| Micro | `SAMPLE_COUNT`, `PEAK_SMOOTH_PERCENT` |
-| Plages ADC | `ADC_FIN_ZONE_VERT`, `ADC_FIN_ZONE_ORANGE` |
-| Hauteur VU | `MIN_LEDS_ON`, `USE_AUTO_VU_MAX`, `CAL_VU_MARGIN` |
-| Montée / descente | `ATTACK_PERCENT`, `DESCENT_DELAY_SEC`, `DESCENT_DURATION_SEC` |
-| Wi-Fi téléphone | `WIFI_AP_SSID`, `WIFI_MDNS_NAME` (`cantaluz.local`), `WIFI_CAPTIVE_PORTAL` |
-| Flash bleu | `TRANSITION_COOLDOWN_SEC`, `FLASH_COUNT`, `STATE_HOLD_MS` |
-| Boot | `BOOT_BLUE_MS`, `BOOT_VU_SPEED_PERCENT` |
-| Debug | `DEBUG_SERIAL`, `SERIAL_BAUD`, `DEBUG_INTERVAL_MS` |
+| Où | Quoi |
+|----|------|
+| **App Réglages** | Sensibilité, Zone calme, Zone animée, Luminosité, Montée barre (live, jusqu’au reboot) |
+| **Config.h** | Défauts au boot, matériel, méditation, Wi-Fi, comportement Flash vs Standard |
+
+### Pourquoi `ATTACK_*` et `LENT_ATTACK_*` ?
+
+Ce ne sont **pas** la même chose en double :
+
+| Paramètre Flash | Paramètre Standard | Rôle |
+|-----------------|-------------------|------|
+| `ATTACK_PERCENT` | `LENT_ATTACK_PERCENT` | Vitesse montée barre |
+| `MAX_BRIGHTNESS` | `LENT_MAX_BRIGHTNESS` | Luminosité |
+| `AVG_SMOOTH_PERCENT` | `LENT_AVG_SMOOTH_PERCENT` | Stabilité barre |
+| `PEAK_SMOOTH_PERCENT` | `LENT_PEAK_SMOOTH_PERCENT` | Lissage (Flash seulement pour paliers) |
+| `DESCENT_*` | `LENT_DESCENT_*` | Descente barre |
+
+Le mode actif choisit **un** jeu à la fois (`configApply` ou `configApplyLent`).
+
+### Sensibilité vs Zone calme / animée
+
+| Curseur app | Effet |
+|-------------|--------|
+| **Sensibilité** | Porte de bruit + hauteur de barre (voir `MIC_SENS_*` ci-dessous) |
+| **Zone calme / animée** | Seuils **eff** pour flashs et répartition vert / orange / rouge sur le ruban (`ADC_FIN_ZONE_*`) |
+
+### Paramètres `MIC_SENS_*` (Config.h)
+
+Le curseur **Sensibilité** de l’app (0–100) ne se règle pas directement dans `Config.h` :  
+`DEFAULT_SENSITIVITY` fixe seulement la **valeur au boot**.  
+Les six constantes `MIC_SENS_*` définissent **comment** le curseur est converti en trois nombres utilisés par `MicSensor.cpp` :
+
+| Constante | Rôle | Si sensibilité = **0** (faible) | Si sensibilité = **100** (forte) |
+|-----------|------|--------------------------------|----------------------------------|
+| `MIC_SENS_GATE_MIN` / `MAX` | **Porte** : soustraite au `raw` pour obtenir `eff` | gate = **110** (beaucoup filtré) | gate = **10** (peu filtré) |
+| `MIC_SENS_SPAN_MIN` / `MAX` | **Plage** : `eff` needed pour barre à 100 % | span = **720** (faut parler fort) | span = **220** (barre monte vite) |
+| `MIC_SENS_DB_MIN` / `MAX` | **Zone morte** : en dessous, la barre ne monte pas | deadband = **35** (très stable) | deadband = **8** (plus nerveux) |
+
+Formules (`s` = sensibilité 0–100) :
+
+```
+micGate     = MIC_SENS_GATE_MAX - s × (GATE_MAX - GATE_MIN) / 100
+micSpan     = MIC_SENS_SPAN_MAX - s × (SPAN_MAX - SPAN_MIN) / 100
+micDeadband = MIC_SENS_DB_MAX   - s × (DB_MAX   - DB_MIN)   / 100
+
+eff = max(0, raw - micGate)
+hauteur barre ≈ eff / micSpan   (0 % … 100 %)
+```
+
+**Exemple** avec défaut `DEFAULT_SENSITIVITY = 8` → gate ≈ 102, span ≈ 680 :
+
+- Pièce calme, `raw = 25` → `eff = 0` → barre au minimum (quelques LED vertes).
+- Voix normale, `raw = 180` → `eff = 78` → barre ≈ 11 %.
+- Cri / forte voix, `raw = 400` → `eff = 298` → barre ≈ 44 %.
+
+Pour une salle bruyante : baisser la sensibilité dans l’app (0–10) ou augmenter `MIC_SENS_GATE_MAX`.  
+Pour une salle très calme où la voix ne monte pas assez : monter la sensibilité ou diminuer `MIC_SENS_SPAN_MAX`.
+
+## Sections Config.h (résumé)
 
 ## Ajouter un mode plus tard
 

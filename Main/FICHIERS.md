@@ -31,7 +31,7 @@
 
 | Fichier | Rôle | Réglages Config.h liés |
 |---------|------|-------------------------|
-| **MicSensor.h / .cpp** | Lecture micro, barre VU, calibration silence | MICRO, HAUTEUR BARRE VU |
+| **MicSensor.h / .cpp** | Lecture micro, barre VU, sensibilité app | MICRO, DEFAULT_SENSITIVITY |
 | **LedStrip.h / .cpp** | Ruban, zones couleur, boot visuel | BANDEAU, PLAGES ADC, BOOT |
 | **FlashEtat.h / .cpp** | Flashs bleus, paliers montée/descente | FLASH BLEU, PLAGES ADC |
 | **DebugLog.h / .cpp** | Moniteur série 115200 | DEBUG SÉRIE |
@@ -44,6 +44,7 @@
 |---------|------|------------|
 | **ModeImmediat.h / .cpp** | Mode **Flash** (VU + flash bleu) | Logique mode réactif |
 | **ModeLent.h / .cpp** | Mode **Standard** (VU adouci, sans flash) | Logique mode calme |
+| **ModeMeditation.h / .cpp** | Mode **Méditation guidée** (respiration séquentielle) | Section MÉDITATION dans Config.h |
 | **Modes.h / .cpp** | Dispatch selon `g.live.activeMode` ; `modesSetActive()` | Pour ajouter un nouveau mode |
 | **Main.ino** | `setup()` / `loop()` Arduino | Presque jamais |
 
@@ -67,7 +68,7 @@ Main.ino setup()
           → ledAfficherBleuComplet()
           → configApply()
           → ledRunBootSequence()
-          → micCalibrateVuMax()   (si USE_AUTO_VU_MAX)
+          → micInitVuFromSettings()
 ```
 
 ## Flux à chaque boucle
@@ -76,7 +77,7 @@ Main.ino setup()
 Main.ino loop()
   → wifiPortalLoop()             (si WIFI_ENABLE : DNS + HTTP)
   → modesLoop()
-      → modeImmediatLoop()  ou  modeLentLoop()
+      → modeImmediatLoop() | modeLentLoop() | modeMeditationLoop()
           → micSample() … ledRenderVuMeter()
           → (Flash uniquement) flashHandleStateMachine()
 ```
@@ -87,8 +88,8 @@ Main.ino loop()
 Téléphone → Wi-Fi Cantaluz
   → portail captif ou http://cantaluz.local
   → WebAppHtml.h (PROGMEM)
-  → /api/status | /api/settings | /api/reset
-  → g.live (LiveConfig) + modesSetActive()
+  → /api/status | /api/settings | /api/meditation/start | /api/meditation/stop
+  → g.live + g.med (MeditationState) + modesSetActive()
 ```
 
 ---

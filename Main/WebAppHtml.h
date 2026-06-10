@@ -1,5 +1,5 @@
 #pragma once
-// Cantaluz — app legere (Flash / Standard)
+// Cantaluz — app (Flash / Standard / Méditation guidée)
 
 static const char APP_HTML[] PROGMEM = R"CLAPP(
 <!DOCTYPE html>
@@ -50,6 +50,21 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .btn-save{width:100%;padding:14px;border:0;border-radius:12px;background:var(--g);color:#fff;font-size:.95rem;font-weight:700;margin-top:6px;cursor:pointer}
 .toast{position:fixed;top:72px;left:50%;transform:translateX(-50%) translateY(-50px);background:#121a28f5;border:1px solid rgba(34,211,238,.45);color:#fff;padding:10px 18px;border-radius:14px;font-size:.85rem;font-weight:600;opacity:0;transition:.3s;z-index:60;pointer-events:none;white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.med-phase{font-size:1.6rem;font-weight:800;text-align:center;margin:8px 0 4px;background:var(--g);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.med-timer{font-size:2rem;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;color:var(--c)}
+.med-sub{text-align:center;font-size:.82rem;color:var(--muted);margin:6px 0 12px}
+.med-count{font-size:3rem;font-weight:800;text-align:center;color:var(--p);min-height:3.2rem;line-height:1}
+.med-dur-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px}
+.med-dur-l{font-size:.85rem;font-weight:600;color:var(--text)}
+.dur-row{display:flex;gap:8px;margin-bottom:10px}
+.dur{flex:1;padding:12px 6px;border:2px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(0,0,0,.2);color:var(--muted);font-weight:700;font-size:.85rem;cursor:pointer}
+.dur.on{border-color:var(--v);color:var(--text);background:rgba(168,85,247,.2)}
+.btn-stop{width:100%;padding:14px;border:0;border-radius:12px;background:rgba(236,72,153,.35);color:#fff;font-size:.95rem;font-weight:700;margin-top:8px;cursor:pointer}
+.hide{display:none!important}
+.dim{opacity:.35;pointer-events:none}
+.clr{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:3px;border:1px solid rgba(255,255,255,.25)}
+.clr-in{background:#00c8ff}.clr-ho{background:#ffa000}.clr-ex{background:#ff00b4}.clr-em{background:#dcdcff}
+.bub-med strong{color:var(--text)}
 </style>
 </head>
 <body>
@@ -66,17 +81,42 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 <div class="g-legend"><span>30 s</span><span>Maintenant</span></div>
 <div class="vu"><div class="vu-f" id="vu"></div></div>
 </div>
+<div class="card hide" id="card-medit">
+<div class="card-t">Méditation guidée</div>
+<div class="med-phase" id="med-phase">Prêt</div>
+<div class="med-count hide" id="med-count"></div>
+<div class="med-timer" id="med-timer">00:00</div>
+<div class="med-sub" id="med-sub">Choisissez une durée puis appuyez sur Démarrer.</div>
+<div class="med-dur-h" id="med-dur-h">
+<span class="med-dur-l">Durée de la séance</span>
+<button type="button" class="tip" id="tip-med-btn" data-tip="tip-med">i</button>
+</div>
+<p class="bub bub-med" id="tip-med"></p>
+<div class="dur-row" id="dur-row">
+<button type="button" class="dur on" data-dur="120">2 min</button>
+<button type="button" class="dur" data-dur="300">5 min</button>
+<button type="button" class="dur" data-dur="600">10 min</button>
+</div>
+<button type="button" class="btn-save" id="med-start">Démarrer</button>
+<button type="button" class="btn-stop hide" id="med-stop">Arrêter</button>
+</div>
 <div class="card" id="card-mode">
 <div class="card-t">Mode</div>
 <div class="modes">
 <button type="button" class="mode-btn" id="m0" data-mode="0"><b class="grad-t">Flash</b><span>Les pics sonores sont signalés par des flashs bleus.</span></button>
 <button type="button" class="mode-btn" id="m1" data-mode="1"><b class="grad-t">Standard</b><span>Un vu-mètre qui oscille au gré de l'ambiance captée.</span></button>
+<button type="button" class="mode-btn" id="m2" data-mode="2"><b class="grad-t">Méditation guidée</b><span>Respiration guidée : inspire, retiens, expire — une LED après l'autre.</span></button>
 </div>
 </div>
 </section>
 <section id="tab-reg" class="tab">
 <div class="card" id="card-reg">
 <div class="card-t">Paramètres</div>
+<div class="field" data-f="sens">
+<div class="fh"><label>Sensibilité</label><span class="fv" id="vs">8</span><button type="button" class="btn-rst" data-field="sens">&#8634;</button><button type="button" class="tip" data-tip="tip-s">i</button></div>
+<p class="bub" id="tip-s">Plus bas = ruban stable au silence. Plus haut = réaction plus forte à la voix.</p>
+<input type="range" id="sens" min="0" max="100" step="5">
+</div>
 <div class="field" data-f="vert">
 <div class="fh"><label>Zone calme</label><span class="fv" id="vv">400</span><button type="button" class="btn-rst" data-field="vert">&#8634;</button><button type="button" class="tip" data-tip="tip-v">i</button></div>
 <p class="bub" id="tip-v">Classe discrète : ruban surtout vert.</p>
@@ -106,26 +146,36 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 <button type="button" data-tab="tab-reg">Réglages</button>
 </nav>
 <script>
-var mode=0,hist=[],G,edit=0,applyT=0,lastF='',dashOn=1,tick=0;
+var mode=0,hist=[],G,edit=0,applyT=0,dashOn=1,medDur=120;
+var PH={idle:'Prêt',countdown:'Préparez-vous',inspire:'Inspire',hold:'Retiens',expire:'Expire',holdempty:'Bloque l\'air',pause:'',done:'Terminé'};
+var MEDP={120:{lb:'2 minutes',in:4,ho:2,ex:5,em:2,pa:1},300:{lb:'5 minutes',in:5,ho:3,ex:6,em:2,pa:1},600:{lb:'10 minutes',in:6,ho:4,ex:7,em:3,pa:2}};
 function qs(id){return document.getElementById(id)}
+function medReps(d){var p=MEDP[d]||MEDP[120];return Math.floor((d||120)/(p.in+p.ho+p.ex+p.em+p.pa))}
+function updateMedTip(){var p=MEDP[medDur]||MEDP[120],n=medReps(medDur),cy=p.in+p.ho+p.ex+p.em+p.pa;qs('tip-med').innerHTML='<strong>Séance '+p.lb+'</strong> — environ <strong>'+n+' respirations</strong> (cycle '+cy+' s).<br>Chaque respiration : <span class="clr clr-in"></span>Inspire '+p.in+' s → <span class="clr clr-ho"></span>Retiens '+p.ho+' s → <span class="clr clr-ex"></span>Expire '+p.ex+' s → <span class="clr clr-em"></span>Bloque l\'air '+p.em+' s, puis pause '+p.pa+' s.<br>Les LED s\'allument <strong>une par une</strong>, toujours dans le même sens sur tout le ruban.'}
 function toast(m){qs('toast').textContent=m;qs('toast').classList.add('show');setTimeout(function(){qs('toast').classList.remove('show')},2000)}
 function vibe(){try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}}
 function fb(msg,k){toast(msg);vibe();var c=k==='mode'?qs('card-mode'):qs('card-reg');c.classList.add('fb-on');setTimeout(function(){c.classList.remove('fb-on')},500)}
-function syncMode(m){mode=+m;qs('m0').className='mode-btn'+(mode===0?' on':'');qs('m1').className='mode-btn'+(mode===1?' on':'')}
-function syncSl(j){qs('vert').value=j.vert;qs('orange').value=j.orange;qs('bright').value=j.brightness;qs('attack').value=j.attack;qs('vv').textContent=j.vert;qs('vo').textContent=j.orange;qs('vb').textContent=j.brightness;qs('va').textContent=j.attack+'%'}
-function par(){return'vert='+qs('vert').value+'&orange='+qs('orange').value+'&bright='+qs('bright').value+'&attack='+qs('attack').value+'&mode='+mode}
-async function applyNow(k){try{var r=await fetch('/api/settings?'+par());var j=await r.json();if(!j.ok)return toast('Échec');syncSl(j);syncMode(j.mode);fb(k==='mode'?(j.mode?'Mode Standard activé':'Mode Flash activé'):'Réglage enregistré',k);edit=0}catch(e){toast('Erreur réseau')}}
-function sched(id){lastF=id;edit=1;clearTimeout(applyT);applyT=setTimeout(function(){applyNow('reg')},550)}
-function drawG(){if(!G||hist.length<2)return;var x=G,c=x.getContext('2d'),w=x.width,h=x.height,n=hist.length,i,d;x.width=x.width;c.clearRect(0,0,w,h);c.strokeStyle='#22d3ee';c.lineWidth=2;c.beginPath();for(i=0;i<n;i++){var px=2+i*(w-4)/(n-1),py=h-3-(hist[i]/100)*(h-6);if(!i)c.moveTo(px,py);else c.lineTo(px,py)}c.stroke()}
+function fmt(s){s=+s||0;var m=Math.floor(s/60),x=s%60;return(m<10?'0':'')+m+':'+(x<10?'0':'')+x}
+function syncMode(m){mode=+m;qs('m0').className='mode-btn'+(mode===0?' on':'');qs('m1').className='mode-btn'+(mode===1?' on':'');qs('m2').className='mode-btn'+(mode===2?' on':'');var med=mode===2;qs('card-graph').classList.toggle('hide',med);qs('card-medit').classList.toggle('hide',!med);qs('tab-reg').classList.toggle('dim',med)}
+function syncSl(j){qs('sens').value=j.sensitivity!=null?j.sensitivity:8;qs('vert').value=j.vert;qs('orange').value=j.orange;qs('bright').value=j.brightness;qs('attack').value=j.attack;qs('vs').textContent=j.sensitivity!=null?j.sensitivity:8;qs('vv').textContent=j.vert;qs('vo').textContent=j.orange;qs('vb').textContent=j.brightness;qs('va').textContent=j.attack+'%'}
+function par(){return'sens='+qs('sens').value+'&vert='+qs('vert').value+'&orange='+qs('orange').value+'&bright='+qs('bright').value+'&attack='+qs('attack').value+'&mode='+mode}
+function modeLbl(m){return m===2?'Méditation guidée':m?'Standard':'Flash'}
+async function applyNow(k){try{var r=await fetch('/api/settings?'+par());var j=await r.json();if(!j.ok)return toast('Échec');syncSl(j);syncMode(j.mode);if(k==='mode')fb('Mode '+modeLbl(j.mode)+' activé',k);else fb('Réglage enregistré',k);edit=0}catch(e){toast('Erreur réseau')}}
+function sched(id){edit=1;clearTimeout(applyT);applyT=setTimeout(function(){applyNow('reg')},550)}
+function drawG(){if(!G||hist.length<2)return;var x=G,c=x.getContext('2d'),w=x.width,h=x.height,n=hist.length,i;x.width=x.width;c.clearRect(0,0,w,h);c.strokeStyle='#22d3ee';c.lineWidth=2;c.beginPath();for(i=0;i<n;i++){var px=2+i*(w-4)/(n-1),py=h-3-(hist[i]/100)*(h-6);if(!i)c.moveTo(px,py);else c.lineTo(px,py)}c.stroke()}
 function resizeG(){G=qs('graph');if(!G)return;G.width=G.offsetWidth;G.height=G.offsetHeight;drawG()}
+function syncMed(j){if(mode!==2)return;var run=j.medRunning==='true'||j.medRunning===true;var cnt=j.medCounting==='true'||j.medCounting===true;var ph=j.medPhase||'idle';qs('med-phase').textContent=PH[ph]||ph;qs('dur-row').classList.toggle('dim',run||cnt);qs('med-dur-h').classList.toggle('dim',run||cnt);qs('med-start').classList.toggle('hide',run||cnt);qs('med-stop').classList.toggle('hide',!(run||cnt));if(run||cnt)qs('tip-med').classList.remove('show');if(cnt&&j.medCountdown>0){qs('med-count').classList.remove('hide');qs('med-count').textContent=j.medCountdown;qs('med-timer').textContent=fmt(j.medDur||medDur);qs('med-sub').textContent='La séance commence dans…'}else{qs('med-count').classList.add('hide');if(run){qs('med-timer').textContent=fmt(j.medElapsed||0);qs('med-sub').textContent='Reste '+fmt(j.medRemain||0)+' · durée '+fmt(j.medDur||medDur)}else if(ph==='done'){qs('med-timer').textContent=fmt(j.medDur||medDur);qs('med-sub').textContent='Séance terminée. Bravo !'}else{qs('med-timer').textContent='00:00';qs('med-sub').textContent='Choisissez une durée puis appuyez sur Démarrer.'}}}
 document.querySelectorAll('.nav button').forEach(function(b){b.onclick=function(){document.querySelectorAll('.nav button').forEach(function(x){x.classList.remove('on')});document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on')});b.classList.add('on');qs(b.getAttribute('data-tab')).classList.add('on');dashOn=b.getAttribute('data-tab')==='tab-dash';if(dashOn)setTimeout(resizeG,50)}});
-document.querySelectorAll('.tip').forEach(function(b){b.onclick=function(){qs(b.getAttribute('data-tip')).classList.toggle('show');b.classList.toggle('on')}});
-['vert','orange','bright','attack'].forEach(function(id){var e=qs(id);e.oninput=function(){var t=qs('v'+id[0]);if(t)t.textContent=id==='attack'?e.value+'%':e.value;sched(id)}});
+document.querySelectorAll('.tip').forEach(function(b){b.onclick=function(){if(b.parentElement&&b.parentElement.classList.contains('dim'))return;var id=b.getAttribute('data-tip');qs(id).classList.toggle('show');b.classList.toggle('on')}});
+['sens','vert','orange','bright','attack'].forEach(function(id){var e=qs(id);e.oninput=function(){var t=id==='sens'?qs('vs'):qs('v'+id[0]);if(t)t.textContent=id==='attack'?e.value+'%':e.value;sched(id)}});
 document.querySelectorAll('.mode-btn').forEach(function(b){b.onclick=function(){syncMode(b.getAttribute('data-mode'));applyNow('mode')}});
+document.querySelectorAll('.dur').forEach(function(b){b.onclick=function(){if(qs('dur-row').classList.contains('dim'))return;document.querySelectorAll('.dur').forEach(function(x){x.classList.remove('on')});b.classList.add('on');medDur=+b.getAttribute('data-dur');updateMedTip()}});
+qs('med-start').onclick=async function(){try{var r=await fetch('/api/meditation/start?dur='+medDur);var j=await r.json();if(j.ok){toast('Démarrage…');vibe()}else toast('Choisissez le mode Méditation')}catch(e){toast('Erreur réseau')}};
+qs('med-stop').onclick=async function(){try{await fetch('/api/meditation/stop');toast('Séance arrêtée')}catch(e){}};
 document.querySelectorAll('.btn-rst').forEach(function(b){b.onclick=async function(){try{var r=await fetch('/api/reset?field='+b.getAttribute('data-field'));var j=await r.json();if(j.ok){syncSl(j);fb('Valeur d\'origine','reg')}}catch(e){}}});
-async function poll(){if(!dashOn){tick++;return}try{var r=await fetch('/api/status');var j=await r.json();var n=j.niveau!=null?j.niveau:j.barre;qs('vu').style.width=Math.max(4,n)+'%';if(!hist.length||hist[hist.length-1]!=n){hist.push(n);if(hist.length>28)hist.shift();drawG()}if(!edit){syncSl(j);syncMode(j.mode)}}catch(e){}tick++}
+async function poll(){try{var r=await fetch('/api/status');var j=await r.json();if(mode!==2&&dashOn){var n=j.niveau!=null?j.niveau:j.barre;qs('vu').style.width=Math.max(4,n)+'%';if(!hist.length||hist[hist.length-1]!=n){hist.push(n);if(hist.length>28)hist.shift();drawG()}}if(!edit){syncSl(j);syncMode(j.mode)}syncMed(j)}catch(e){}}
 qs('save').onclick=function(){applyNow('reg')};
-setTimeout(function(){resizeG();poll();setInterval(poll,900)},400);
+setTimeout(function(){updateMedTip();resizeG();poll();setInterval(poll,500)},400);
 </script>
 </body>
 </html>

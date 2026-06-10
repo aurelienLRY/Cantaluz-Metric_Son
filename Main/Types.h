@@ -55,11 +55,13 @@ enum ColorState : uint8_t {
  * Modes disponibles :
  *   BRUIT_MODE_IMMEDIAT → VU réactif + flash bleu (ModeImmediat.cpp)
  *   BRUIT_MODE_LENT     → VU adouci, sans flash (ModeLent.cpp)
+ *   BRUIT_MODE_MEDITATION → respiration guidée (ModeMeditation.cpp)
  */
 enum BruitLedMode : uint8_t {
   BRUIT_MODE_IMMEDIAT = 0,
-  BRUIT_MODE_LENT     = 1
-  // BRUIT_MODE_PULSE  = 2,  // futur : pulsation sur le bruit
+  BRUIT_MODE_LENT     = 1,
+  BRUIT_MODE_MEDITATION = 2
+  // BRUIT_MODE_PULSE  = 3,  // futur : pulsation sur le bruit
 };
 
 // ═══════════════════════════════════════════════════════════════
