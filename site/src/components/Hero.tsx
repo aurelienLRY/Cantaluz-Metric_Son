@@ -5,7 +5,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button-link";
-import { ArrowDown, Sparkles } from "lucide-react";
+import { ArrowDown, Code2, BookOpen } from "lucide-react";
 
 export function Hero() {
   const containerRef = useRef<HTMLElement>(null);
@@ -43,8 +43,8 @@ export function Hero() {
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
         <Badge variant="secondary" className="hero-badge mb-6 gap-1.5 px-3 py-1">
-          <Sparkles className="size-3.5 text-amber-400" />
-          Projet pédagogique · ESP8266 · ruban WS2812B
+          <BookOpen className="size-3.5 text-violet-400" />
+          Open source · Documentation · ESP8266
         </Badge>
 
         <h1 className="hero-title font-heading text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl">
@@ -55,17 +55,18 @@ export function Hero() {
         </h1>
 
         <p className="hero-sub mx-auto mt-6 max-w-2xl text-lg text-muted-foreground md:text-xl">
-          <strong className="text-foreground">Cantaluz</strong> accompagne les
-          classes vers le calme : un ruban LED réactif au micro, piloté depuis
-          un téléphone via Wi-Fi — sans câble, sans application à installer.
+          Wiki du projet <strong className="text-foreground">Cantaluz</strong> :
+          présentation, câblage, firmware et dépôt GitHub. Ruban LED réactif au
+          micro, piloté par une app web embarquée.
         </p>
 
         <div className="hero-cta mt-10 flex flex-wrap items-center justify-center gap-4">
-          <ButtonLink href="#projet" size="lg">
-            Découvrir le projet
+          <ButtonLink href="#wiki" size="lg" className="gap-2">
+            <Code2 className="size-4" />
+            GitHub & doc
           </ButtonLink>
-          <ButtonLink href="#boitier" size="lg" variant="outline">
-            Voir le boîtier
+          <ButtonLink href="#cablage" size="lg" variant="outline">
+            Schéma de câblage
           </ButtonLink>
         </div>
       </div>

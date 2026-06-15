@@ -8,7 +8,7 @@ Fichiers attendus :
   - ruban.svg        → ruban LED WS2812B
   - app-mobile.svg   → capture de l'app web sur téléphone
   - classe.svg       → utilisation en classe (optionnel)
-  - schema.svg       → schéma des composants (optionnel)
+  - schema.svg       → schéma de câblage (remplacer par schema.jpg / .png)
 
 Si vous changez l'extension (.jpg), mettez à jour les chemins dans
 src/components/sections/*.tsx ou gardez le même nom de fichier.

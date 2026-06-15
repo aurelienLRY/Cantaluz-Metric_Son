@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
+import { CookieBanner } from "@/components/CookieBanner";
 import "./globals.css";
 
 const sourceSans = Source_Sans_3({
@@ -13,9 +14,9 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Cantaluz — Vumètre pédagogique pour l'école",
+  title: "Cantaluz — Repère sensoriel pour l'autorégulation en classe",
   description:
-    "Rendez le bruit visible. Aidez les élèves à s'autoréguler en classe et en cantine grâce à un signal LED simple et immédiatement compréhensible.",
+    "Un bandeau lumineux qui rend le bruit visible. Cantaluz accompagne les pédagogies Montessori et Freinet vers l'autonomie, la coopération et le respect du collectif.",
 };
 
 export default function RootLayout({
@@ -28,7 +29,10 @@ export default function RootLayout({
       lang="fr"
       className={`${sourceSans.variable} ${sourceSerif.variable} scroll-smooth antialiased`}
     >
-      <body className="min-h-full font-sans">{children}</body>
+      <body className="min-h-full font-sans">
+        {children}
+        <CookieBanner />
+      </body>
     </html>
   );
 }

@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
 
 const points = [
-  "Signal rassurant quand l'ambiance reste calme",
-  "Lumière plus visible quand le niveau sonore monte",
-  "Alerte douce pour le groupe, sans sanction",
-  "Repère concret pour doser la voix selon le moment",
+  "Un feedback sensoriel immédiat, accessible à tous les âges",
+  "Les enfants lisent le signal et s'ajustent par eux-mêmes",
+  "L'adulte accompagne le groupe, sans jouer le gendarme du silence",
+  "Une routine collective que la classe peut s'approprier et co-construire",
 ];
 
 export function SolutionSection() {
@@ -25,11 +25,11 @@ export function SolutionSection() {
         <div className="reveal relative order-2 lg:order-1">
           <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-lg">
             <Image
-              src="/images/produit.svg"
+              src="/images/produit.webp"
               alt="Vumètre pédagogique Cantaluz — photo produit à remplacer"
               width={900}
-              height={600}
-              className="h-auto w-full object-cover"
+              height={900}
+              className="aspect-square object-cover object-center"
             />
           </div>
         </div>
@@ -39,21 +39,26 @@ export function SolutionSection() {
             Ce que fait le produit
           </Badge>
           <h2 className="reveal font-heading text-3xl font-bold tracking-tight md:text-4xl">
-            Un boîtier qui traduit le bruit en lumière
+            Du son à la lumière : un matériel pour agir ensemble
           </h2>
           <p className="reveal text-lg leading-relaxed text-muted-foreground">
-            Le boîtier capte le bruit ambiant grâce à un micro intégré, puis le
-            traduit sur un bandeau LED. Quand l&apos;ambiance reste calme, le
-            signal est rassurant ; quand le niveau sonore monte, la lumière
-            devient plus visible pour alerter le groupe en douceur.
+            Un micro capte l&apos;ambiance ; un bandeau LED la traduit en
+            lumière. Comme un matériel d&apos;exploration sensorielle, le
+            dispositif donne aux enfants un repère objectif sur leur
+            environnement sonore — ils voient, comprennent et ajustent leur
+            comportement en situation réelle.
           </p>
           <p className="reveal leading-relaxed text-muted-foreground">
-            L&apos;objectif n&apos;est pas de « faire taire » les enfants, mais
-            de leur donner un repère concret pour apprendre à mieux doser leur
-            voix selon le moment et l&apos;espace.
+            L&apos;enjeu n&apos;est pas de faire taire, mais d&apos;aider chaque
+            enfant à prendre conscience de son impact sur le collectif — dans
+            l&apos;esprit des pédagogies qui placent l&apos;autonomie et la
+            coopération au cœur de l&apos;apprentissage.
           </p>
           <p className="reveal rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-900">
-            <strong>C&apos;est un outil pédagogique, pas un outil de sanction.</strong>
+            <strong>
+              Un outil d&apos;accompagnement et d&apos;expérimentation — jamais
+              un instrument de sanction.
+            </strong>
           </p>
           <ul className="reveal space-y-3 pt-2">
             {points.map((point) => (

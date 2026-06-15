@@ -17,23 +17,24 @@ export function ProblemeSection() {
           <AlertCircle className="size-6" />
         </div>
         <h2 className="reveal font-heading text-3xl font-bold tracking-tight md:text-4xl">
-          Le bruit se ressent partout, mais on ne le voit pas
+          Le bruit est un phénomène invisible — difficile à nommer pour un enfant
         </h2>
         <p className="reveal mt-6 text-lg leading-relaxed text-muted-foreground">
-          Dans un établissement scolaire, le bruit ne se voit pas, mais il se
-          ressent partout : concentration, fatigue, stress, qualité des échanges,
-          ambiance collective. Les ressources sur le bruit en milieu scolaire
-          rappellent qu&apos;il est essentiel d&apos;agir à la fois sur
-          l&apos;environnement sonore et sur les comportements — notamment dans
-          les restaurants scolaires et les salles de classe.
+          Dans une classe ou une cantine, l&apos;ambiance sonore influence la
+          concentration, les échanges et le bien-être du groupe. Pourtant, le
+          bruit reste abstrait : on le subit plus qu&apos;on le comprend.
+          Les pédagogies Montessori et Freinet invitent à rendre l&apos;expérience{" "}
+          <em>concrète</em> pour que l&apos;enfant puisse agir dessus — pas
+          seulement obéir à une consigne.
         </p>
         <p className="reveal mt-4 text-lg leading-relaxed text-muted-foreground">
-          Notre solution a été pensée pour cela : rendre le niveau sonore{" "}
+          Cantaluz répond à ce besoin : transformer le niveau sonore en signal
+          lumineux{" "}
           <strong className="font-medium text-foreground">
-            compréhensible immédiatement
+            immédiatement lisible
           </strong>
-          , afin d&apos;encourager une régulation simple, collective et
-          progressive.
+          , pour favoriser l&apos;autorégulation, la coopération et la prise de
+          conscience collective — au rythme du groupe, pas par la contrainte.
         </p>
       </div>
     </section>

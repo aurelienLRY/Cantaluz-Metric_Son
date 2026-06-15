@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
+import { CookieBanner } from "@/components/CookieBanner";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -28,7 +29,10 @@ export default function RootLayout({
       lang="fr"
       className={`${dmSans.variable} ${fraunces.variable} dark h-full scroll-smooth antialiased`}
     >
-      <body className="min-h-full font-sans">{children}</body>
+      <body className="min-h-full font-sans">
+        {children}
+        <CookieBanner />
+      </body>
     </html>
   );
 }

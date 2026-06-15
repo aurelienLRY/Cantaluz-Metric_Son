@@ -5,10 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { UtensilsCrossed, GraduationCap, Clock, Users } from "lucide-react";
 
 const usages = [
-  { icon: GraduationCap, label: "Classe" },
-  { icon: UtensilsCrossed, label: "Restauration scolaire" },
-  { icon: Clock, label: "Accueil périscolaire" },
-  { icon: Users, label: "Espaces de regroupement" },
+  { icon: GraduationCap, label: "Classes Montessori et Freinet" },
+  { icon: UtensilsCrossed, label: "Restaurants scolaires" },
+  { icon: Clock, label: "Temps d'atelier et périscolaire" },
+  { icon: Users, label: "Conseils de classe et regroupements" },
 ];
 
 export function PourQuiSection() {
@@ -27,23 +27,24 @@ export function PourQuiSection() {
               Pour qui
             </Badge>
             <h2 className="reveal font-heading text-3xl font-bold tracking-tight md:text-4xl">
-              Pensé pour les établissements qui veulent travailler l&apos;ambiance
-              sonore autrement
+              Pour les équipes qui croient à l&apos;autonomie des enfants
             </h2>
             <p className="reveal mt-6 leading-relaxed text-muted-foreground">
-              Ce produit s&apos;adresse en priorité aux établissements du{" "}
+              Cantaluz s&apos;adresse aux établissements du{" "}
               <strong className="font-medium text-foreground">
                 réseau Calendretta
-              </strong>
-              , mais aussi plus largement aux écoles, cantines et espaces
-              éducatifs qui souhaitent responsabiliser les enfants, instaurer
-              des routines collectives et faire du cadre sonore un sujet
-              pédagogique partagé.
+              </strong>{" "}
+              et, plus largement, à toute école engagée dans une pédagogie
+              active : Montessori, Freinet, coopération, éducation inclusive.
             </p>
             <p className="reveal mt-4 leading-relaxed text-muted-foreground">
-              L&apos;argument fort pour Calendretta : l&apos;appropriation par
-              les élèves — ils peuvent s&apos;auto-corriger dans un cadre
-              collectif, sans intervention permanente de l&apos;adulte.
+              C&apos;est un outil pour les enseignants qui veulent travailler
+              le cadre sonore comme un{" "}
+              <strong className="font-medium text-foreground">
+                objet d&apos;apprentissage vivant
+              </strong>{" "}
+              — instaurer des routines avec les enfants, expérimenter, débriefer
+              et faire évoluer les usages au fil de l&apos;année.
             </p>
           </div>
 

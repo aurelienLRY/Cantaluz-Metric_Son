@@ -44,7 +44,7 @@ Ensuite l'appareil fonctionne en **mode Flash** (mode par défaut).
 
 ---
 
-## Les trois modes
+## Les quatre modes
 
 Choisir un mode dans l'app (onglet **Dashboard** → carte **Mode**). Le changement est **immédiat** sur le ruban.
 
@@ -101,6 +101,31 @@ Choisir un mode dans l'app (onglet **Dashboard** → carte **Mode**). Le changem
 
 ---
 
+### 4. Défi Fifou
+
+**Comportement**
+
+- **Jeu du calme** : l'inverse des modes Flash et Standard.
+- L'opérateur choisit une durée (**2 min**, **5 min** ou **10 min**) puis lance le défi.
+- Compte à rebours **5 s** : le bandeau **clignote de plus en plus vite**, puis le chrono démarre.
+- **Départ** : **20 LED** en **cyan** (uniforme sur tout le bandeau pendant le jeu).
+- Selon le niveau sonore :
+  - **Calme** → les LED **augmentent** (on avance vers la fin du ruban).
+  - **Animé** → **statu quo** (ni gain ni perte).
+  - **Intense** → on **perd** des LED (perte plus lente que le gain).
+- **Victoire** : remplir **tout le bandeau** avant la fin du temps → **feu d'artifice** multicolore sur le ruban.
+- **Défaite** : temps écoulé sans avoir rempli le bandeau → **clignotement rouge** sur le ruban + message sur l'app.
+
+**Cas d'usage**
+
+- Gamifier le retour au calme après une activité bruyante.
+- Défi collectif : « Remplissez le ruban avant la fin ! »
+- Alternative ludique à la méditation pour des classes qui aiment la compétition douce.
+
+> **Astuce** : pour gagner en 2 min, il faut environ **1 min 20 de calme** (une marge d'erreur est prévue — l'orange ne fait pas gagner, le rouge fait reculer).
+
+---
+
 ## Mode au démarrage
 
 | | |
@@ -134,8 +159,8 @@ Vous devez utiliser un **smartphone** (ou tablette) connecté au Wi-Fi de Cantal
 
 | Onglet | Contenu |
 |--------|---------|
-| **Dashboard** | Graphique d'ambiance (30 s), barre de niveau, **choix du mode** (Flash / Standard / Méditation guidée). En Méditation : durée 2 / 5 / 10 min, **Démarrer** / **Arrêter**. |
-| **Réglages** | Curseurs + bouton **i** (aide) et **↺** (valeur d'origine). *Grisé en mode Méditation.* |
+| **Dashboard** | Graphique d'ambiance (30 s), barre de niveau, **choix du mode** (Flash / Standard / Méditation guidée / Défi Fifou). En Méditation ou Défi Fifou : durée 2 / 5 / 10 min, **Démarrer** / **Arrêter**. |
+| **Réglages** | Curseurs + bouton **i** (aide) et **↺** (valeur d'origine). *Grisé en mode Méditation et Défi Fifou.* |
 
 | Réglage | À quoi ça sert |
 |---------|----------------|
@@ -145,7 +170,7 @@ Vous devez utiliser un **smartphone** (ou tablette) connecté au Wi-Fi de Cantal
 | **Luminosité** | Intensité globale du ruban. |
 | **Montée de la barre** | Vitesse à laquelle la barre monte quand le son augmente. |
 
-Les réglages s'appliquent **tout de suite**. Ils sont **perdus au redémarrage** de l'appareil (retour aux valeurs par défaut du firmware).
+Les réglages ne partent sur l'appareil qu'après le bouton **Enregistrer**. Ils sont **perdus au redémarrage** de l'appareil (retour aux valeurs par défaut du firmware).
 
 ---
 
@@ -171,6 +196,7 @@ Les réglages s'appliquent **tout de suite**. Ils sont **perdus au redémarrage*
 | Ruban bouge tout seul | Réglages → baisser **Sensibilité** (essayer 0–10). |
 | Trop de rouge / flashs | Baisser **Sensibilité** ; augmenter **Zone calme** et **Zone animée**. |
 | Méditation ne démarre pas | Choisir d'abord le mode **Méditation guidée**, puis **2 / 5 / 10 min**, puis **Démarrer**. |
+| Défi Fifou ne démarre pas | Choisir d'abord le mode **Défi Fifou**, puis **2 / 5 / 10 min**, puis **Démarrer**. |
 
 ---
 

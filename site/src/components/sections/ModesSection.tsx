@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Zap, Waves, Wind } from "lucide-react";
+import { Zap, Waves, Wind, Trophy } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -47,6 +47,18 @@ const modes = [
       "Micro ignoré. Respiration guidée : cyan (inspire), ambre (retiens), magenta (expire), lavande (air bloqué). LED une par une.",
     usage: "Pause après la récréation, retour au calme collectif.",
   },
+  {
+    id: "fifou",
+    icon: Trophy,
+    name: "Défi Fifou",
+    badge: "Jeu · 2 · 5 · 10 min",
+    color: "text-cyan-400",
+    border: "border-cyan-500/30",
+    bg: "bg-cyan-500/10",
+    description:
+      "Jeu du calme chronométré : 20 LED cyan. Calme = gain, animé = statu quo, intense = perte. Victoire = feu d'artifice, défaite = clignotement rouge.",
+    usage: "Défi collectif ludique après une activité bruyante.",
+  },
 ];
 
 export function ModesSection() {
@@ -81,7 +93,7 @@ export function ModesSection() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Badge variant="outline" className="border-rose-500/40 text-rose-400">
-            Les trois modes
+            Les quatre modes
           </Badge>
           <h2 className="font-heading mt-4 text-3xl font-bold tracking-tight md:text-4xl">
             Adapter la lumière au moment de la classe
@@ -92,7 +104,7 @@ export function ModesSection() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
+        <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {modes.map((mode) => (
             <Card
               key={mode.id}

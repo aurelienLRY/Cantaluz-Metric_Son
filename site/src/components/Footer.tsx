@@ -1,4 +1,7 @@
 import { Separator } from "@/components/ui/separator";
+import { LegalFooterLinks } from "@/components/LegalFooterLinks";
+import { PROJECT } from "@/lib/project";
+import { Code2 } from "lucide-react";
 
 export function Footer() {
   return (
@@ -10,11 +13,29 @@ export function Footer() {
           </span>
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          La lumière qui répond au son · Outil d&apos;accompagnement au calme
+          La lumière qui répond au son · Wiki technique open source
         </p>
         <Separator className="my-6 bg-white/10" />
-        <p className="text-xs text-muted-foreground">
-          Projet pédagogique · WeMos D1 · ESP8266 · WS2812B · MAX4466
+        <LegalFooterLinks className="mb-4" />
+        <a
+          href={PROJECT.githubUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <Code2 className="size-3.5" />
+          {PROJECT.githubRepo}
+        </a>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Projet par{" "}
+          <a
+            href={PROJECT.publisherUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            opteo-web.fr
+          </a>
         </p>
       </div>
     </footer>

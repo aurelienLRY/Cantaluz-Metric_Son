@@ -34,6 +34,32 @@ enum MedPhase : uint8_t {
   MED_DONE
 };
 
+// Phases du Défi Fifou (jeu du calme)
+enum FifouPhase : uint8_t {
+  FIFOU_IDLE = 0,
+  FIFOU_COUNTDOWN,
+  FIFOU_PLAYING,
+  FIFOU_WON,
+  FIFOU_LOST,
+  FIFOU_DONE
+};
+
+// État d'une partie Défi Fifou (API web + ModeDefiFifou.cpp)
+struct DefiFifouState {
+  uint8_t durProfile;           // 0 = 2 min, 1 = 5 min, 2 = 10 min
+  uint32_t sessionDurMs;
+  FifouPhase phase;
+  bool countdownActive;
+  bool sessionActive;
+  bool endAnimActive;
+  unsigned long countdownStartMs;
+  unsigned long sessionStartMs;
+  unsigned long endAnimStartMs;
+  float litLeds;                // Nombre de LED allumées (fractionnaire)
+  float gainRatePerSec;         // Vitesse en zone calme (LED/s)
+  float lossRatePerSec;         // Vitesse en zone rouge (LED/s, plus lente)
+};
+
 // État d'une séance Méditation guidée (API web + ModeMeditation.cpp)
 struct MeditationState {
   uint8_t durProfile;           // 0 = 2 min, 1 = 5 min, 2 = 10 min
@@ -52,7 +78,7 @@ struct MeditationState {
 
 // Réglages modifiables en live (Config.h au boot, puis page web /api/settings)
 struct LiveConfig {
-  uint8_t activeMode;     // MODE_IMMEDIAT, MODE_LENT ou MODE_MEDITATION (app web)
+  uint8_t activeMode;     // MODE_IMMEDIAT, MODE_LENT, MODE_MEDITATION ou MODE_DEFI_FIFOU (app web)
   int adcFinZoneVert;     // Seuil fin zone verte (peak ADC)
   int adcFinZoneOrange;   // Seuil fin zone orange (peak ADC)
   uint8_t maxBrightness;  // Luminosité ruban 0-255
@@ -78,6 +104,7 @@ struct AppState {
   LiveConfig live;               // Réglages temps réel (web + Config.h au démarrage)
   RuntimeConfig run;             // Paramètres convertis (voir ci-dessus)
   MeditationState med;           // Séance Méditation guidée
+  DefiFifouState fifou;          // Partie Défi Fifou
 
   int lastPeak;                  // Dernier peak micro (pour API web)
   int lastMicAvg;                // Dernière moyenne micro (pour API web)

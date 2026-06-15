@@ -18,6 +18,7 @@
 | **Flash** | `MODE_IMMEDIAT` (0) | `ModeImmediat.cpp` | VU réactif + flashs bleus sur les pics |
 | **Standard** | `MODE_LENT` (1) | `ModeLent.cpp` | Vu-mètre adouci, **sans flash**, réglages `LENT_*` |
 | **Méditation guidée** | `MODE_MEDITATION` (2) | `ModeMeditation.cpp` | Respiration guidée ; micro ignoré pendant la séance |
+| **Défi Fifou** | `MODE_DEFI_FIFOU` (3) | `ModeDefiFifou.cpp` | Jeu du calme ; gain en zone verte, statu quo orange, perte rouge |
 
 - **Au boot** : le mode initial est **`MODE_ACTIF`** dans `Config.h`.
 - **En cours d’exécution** : l’app web change `g.live.activeMode` (`Modes.cpp` → `modesSetActive()`).
@@ -27,17 +28,20 @@
 
 | Onglet | Contenu |
 |--------|---------|
-| **Dashboard** | Graphique ambiance 30 s, barre VU, modes Flash / Standard / Méditation guidée |
+| **Dashboard** | Graphique ambiance 30 s, barre VU, modes Flash / Standard / Méditation / Défi Fifou |
 | **Méditation guidée** | Durée 2 / 5 / 10 min, Démarrer, compte à rebours, chrono, phases |
-| **Réglages** | Zone calme, zone animée, luminosité, montée barre (grisés en méditation) |
+| **Défi Fifou** | Durée 2 / 5 / 10 min, Démarrer, compte à rebours, chrono, LED gagnées / objectif |
+| **Réglages** | Zone calme, zone animée, luminosité, montée barre (grisés en méditation et Défi Fifou) |
 
 | Route API | Rôle |
 |-----------|------|
 | `GET /api/status` | Niveau sonore, barre, mode, état méditation |
-| `GET /api/settings?...&mode=` | Applique config live (`mode` 0 / 1 / 2) |
+| `GET /api/settings?...&mode=` | Applique config live (`mode` 0 / 1 / 2 / 3) |
 | `GET /api/reset?field=...` | Restaure un paramètre depuis `Config.h` |
 | `GET /api/meditation/start?dur=120\|300\|600` | Compte à rebours puis séance |
 | `GET /api/meditation/stop` | Arrête la séance |
+| `GET /api/fifou/start?dur=120\|300\|600` | Compte à rebours puis défi |
+| `GET /api/fifou/stop` | Arrête le défi |
 
 Réglages live : `activeMode`, seuils vert/orange, luminosité, montée barre, **sensibilité** (`sensitivity` 0–100).
 
@@ -113,6 +117,21 @@ hauteur barre ≈ eff / micSpan   (0 % … 100 %)
 
 Pour une salle bruyante : baisser la sensibilité dans l’app (0–10) ou augmenter `MIC_SENS_GATE_MAX`.  
 Pour une salle très calme où la voix ne monte pas assez : monter la sensibilité ou diminuer `MIC_SENS_SPAN_MAX`.
+
+## Mode Défi Fifou — paramètres `FIFOU_*`
+
+Utilisés quand le mode **Défi Fifou** est actif (`MODE_DEFI_FIFOU` / app web) :
+
+| Paramètre | Rôle |
+|-----------|------|
+| `FIFOU_START_LEDS` | Nombre de LED au départ (défaut 20) |
+| `FIFOU_CALM_RATIO_NUM` / `DEN` | Temps calme minimum pour gagner (ex. 80/120 → 1 min 20 sur 2 min) |
+| `FIFOU_LOSS_GAIN_PERCENT` | Perte en rouge = % de la vitesse de gain (défaut 40 %, plus lent) |
+| `FIFOU_COLOR_*` | Couleur cyan du jeu (uniforme sur le bandeau) |
+| `FIFOU_WIN_FIREWORKS_MS` | Durée du feu d'artifice en cas de victoire |
+| `FIFOU_COUNTDOWN_SEC` | Compte à rebours avant le défi (5 s) |
+
+Les seuils **Zone calme / animée** de l'app déterminent quand on gagne, stagne ou perd (même plages et hystérésis que les modes Flash / Standard : `ledStateWithHysteresis`, `ADC_FIN_ZONE_*`).
 
 ## Sections Config.h (résumé)
 

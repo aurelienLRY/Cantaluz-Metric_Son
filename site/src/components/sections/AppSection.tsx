@@ -5,12 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
-import { Smartphone, Sliders, LayoutDashboard } from "lucide-react";
+import { Smartphone, Sliders, LayoutDashboard, Trophy } from "lucide-react";
 
 const steps = [
   "Connectez le téléphone au réseau Wi-Fi « Cantaluz » (mot de passe : cantaluz1).",
   "Ouvrez http://cantaluz.local dans le navigateur — aucune app à installer.",
-  "Choisissez le mode, ajustez la sensibilité du micro et lancez une méditation.",
+  "Choisissez le mode, ajustez la sensibilité du micro, lancez une méditation ou un Défi Fifou.",
 ];
 
 export function AppSection() {
@@ -28,7 +28,7 @@ export function AppSection() {
             <div className="absolute -inset-8 rounded-full bg-sky-500/10 blur-3xl" />
             <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-card shadow-2xl">
               <Image
-                src="/images/app-mobile.svg"
+                src="/images/app.webp"
                 alt="Application mobile Cantaluz — placeholder"
                 width={400}
                 height={700}
@@ -48,8 +48,9 @@ export function AppSection() {
           <p className="text-muted-foreground leading-relaxed">
             L&apos;interface web est servie directement par la carte. Slogan
             affiché : <em>« Outil d&apos;accompagnement au calme. »</em> —
-            dashboard avec sélection de mode, curseur de sensibilité (0–100) et
-            lancement des séances de méditation guidée.
+            dashboard avec sélection parmi <strong className="text-foreground">quatre modes</strong>,
+            curseur de sensibilité (0–100), séances de méditation guidée et
+            lancement du <strong className="text-foreground">Défi Fifou</strong> (jeu du calme).
           </p>
 
           <ol className="space-y-3 text-sm text-muted-foreground">
@@ -63,17 +64,23 @@ export function AppSection() {
             ))}
           </ol>
 
-          <div className="grid gap-3 pt-2 sm:grid-cols-3">
+          <div className="grid gap-3 pt-2 sm:grid-cols-2 lg:grid-cols-4">
             <Card className="border-white/10 bg-card/50">
               <CardContent className="flex flex-col items-center gap-2 p-4 text-center">
                 <LayoutDashboard className="size-5 text-violet-400" />
-                <span className="text-xs font-medium">Dashboard</span>
+                <span className="text-xs font-medium">4 modes</span>
               </CardContent>
             </Card>
             <Card className="border-white/10 bg-card/50">
               <CardContent className="flex flex-col items-center gap-2 p-4 text-center">
                 <Sliders className="size-5 text-violet-400" />
                 <span className="text-xs font-medium">Sensibilité</span>
+              </CardContent>
+            </Card>
+            <Card className="border-white/10 bg-card/50">
+              <CardContent className="flex flex-col items-center gap-2 p-4 text-center">
+                <Trophy className="size-5 text-amber-400" />
+                <span className="text-xs font-medium">Défi Fifou</span>
               </CardContent>
             </Card>
             <Card className="border-white/10 bg-card/50">
@@ -85,7 +92,7 @@ export function AppSection() {
           </div>
 
           <ButtonLink href="#modes" variant="secondary">
-            Découvrir les trois modes
+            Découvrir les quatre modes
           </ButtonLink>
         </div>
       </div>

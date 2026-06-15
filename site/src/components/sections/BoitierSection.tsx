@@ -39,8 +39,11 @@ export function BoitierSection() {
           </p>
           <p className="text-sm text-muted-foreground">
             Branchez l&apos;alimentation 5 V, appuyez sur le bouton : la séquence
-            de démarrage se lance automatiquement. Aucune calibration au boot —
-            la sensibilité se règle depuis l&apos;application.
+            de démarrage se lance automatiquement. Voir la section{" "}
+            <a href="#cablage" className="text-sky-400 underline underline-offset-2 hover:text-sky-300">
+              Câblage
+            </a>{" "}
+            pour le schéma complet.
           </p>
 
           <Separator className="bg-white/10" />
@@ -58,29 +61,17 @@ export function BoitierSection() {
           </dl>
         </div>
 
-        <div className="reveal-media order-1 md:order-2">
-          <div className="grid gap-4">
             <div className="overflow-hidden rounded-2xl border border-white/10 shadow-xl">
               <Image
-                src="/images/boitier.svg"
-                alt="Boîtier Cantaluz — placeholder"
+                src="/images/produit.webp"
+                alt="Boîtier Cantaluz"
                 width={800}
-                height={600}
-                className="h-auto w-full object-cover"
+                height={800}
+                className="h-auto w-full aspect-square object-cover object-center"
                 priority
               />
             </div>
-            <div className="overflow-hidden rounded-2xl border border-white/10 shadow-lg">
-              <Image
-                src="/images/ruban.svg"
-                alt="Ruban LED — placeholder"
-                width={800}
-                height={500}
-                className="h-auto w-full object-cover"
-              />
-            </div>
-          </div>
-        </div>
+   
       </div>
     </section>
   );

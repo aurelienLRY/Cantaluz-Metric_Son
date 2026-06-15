@@ -43,21 +43,22 @@ export function HeroSection() {
             className="mb-6 border border-emerald-200 bg-emerald-50 text-emerald-800"
           >
             <Volume2 className="mr-1.5 size-3.5" />
-            Vumètre pédagogique pour l&apos;école
+            Pédagogies actives · Montessori · Freinet
           </Badge>
 
           <h1 className="font-heading text-4xl font-bold leading-[1.12] tracking-tight text-foreground sm:text-5xl lg:text-[3.25rem]">
-            Rendez le bruit visible.{" "}
+            Un repère concret pour{" "}
             <span className="text-emerald-700">
-              Aidez les élèves à s&apos;autoréguler.
+              apprendre à vivre ensemble.
             </span>
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Notre vumètre pédagogique transforme le bruit ambiant en signal
-            lumineux simple et lisible. Installé en classe ou en cantine, il
-            aide les enfants à ajuster leur volume sonore en temps réel — sans
-            conflit et sans répétition permanente des consignes.
+            Cantaluz rend le bruit ambiant visible sur un bandeau lumineux —
+            comme un matériel sensoriel au service du groupe. Les enfants
+            perçoivent l&apos;effet de leur voix, s&apos;ajustent en autonomie
+            et construisent collectivement un climat plus serein, sans
+            réprimande ni surveillance permanente.
           </p>
 
           <div className="mt-10 flex flex-wrap gap-4">
@@ -75,7 +76,7 @@ export function HeroSection() {
           <div className="absolute -inset-4 rounded-3xl bg-emerald-100/60 blur-2xl" />
           <div className="relative overflow-hidden rounded-2xl border border-emerald-100 shadow-xl shadow-emerald-900/5">
             <Image
-              src="/images/hero-cantine.svg"
+              src="/images/hero.webp"
               alt="Cantine ou classe scolaire — photo à remplacer"
               width={1200}
               height={700}

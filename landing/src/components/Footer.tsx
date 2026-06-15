@@ -1,4 +1,6 @@
 import { Separator } from "@/components/ui/separator";
+import { LegalFooterLinks } from "@/components/LegalFooterLinks";
+import { LEGAL } from "@/lib/legal";
 
 export function Footer() {
   return (
@@ -8,12 +10,21 @@ export function Footer() {
           Cantaluz
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Vumètre pédagogique · Éducation au bruit · Autorégulation collective
+          Matériel concret · Autonomie · Coopération · Pédagogies actives
         </p>
         <Separator className="my-6" />
+        <LegalFooterLinks className="mb-4" />
         <p className="text-xs text-muted-foreground">
-          Outil d&apos;accompagnement au calme — sans sanction, pour les classes
-          et les cantines.
+          Projet conduit par{" "}
+          <a
+            href={LEGAL.publisherUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            {LEGAL.publisherUrl.replace("https://", "")}
+          </a>
+          {" · "}Hébergé par {LEGAL.hostName}
         </p>
       </div>
     </footer>

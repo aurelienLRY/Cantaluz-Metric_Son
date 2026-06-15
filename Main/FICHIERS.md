@@ -45,6 +45,7 @@
 | **ModeImmediat.h / .cpp** | Mode **Flash** (VU + flash bleu) | Logique mode réactif |
 | **ModeLent.h / .cpp** | Mode **Standard** (VU adouci, sans flash) | Logique mode calme |
 | **ModeMeditation.h / .cpp** | Mode **Méditation guidée** (respiration séquentielle) | Section MÉDITATION dans Config.h |
+| **ModeDefiFifou.h / .cpp** | Mode **Défi Fifou** (jeu du calme chronométré) | Section DÉFI FIFOU dans Config.h |
 | **Modes.h / .cpp** | Dispatch selon `g.live.activeMode` ; `modesSetActive()` | Pour ajouter un nouveau mode |
 | **Main.ino** | `setup()` / `loop()` Arduino | Presque jamais |
 
@@ -77,7 +78,7 @@ Main.ino setup()
 Main.ino loop()
   → wifiPortalLoop()             (si WIFI_ENABLE : DNS + HTTP)
   → modesLoop()
-      → modeImmediatLoop() | modeLentLoop() | modeMeditationLoop()
+      → modeImmediatLoop() | modeLentLoop() | modeMeditationLoop() | modeDefiFifouLoop()
           → micSample() … ledRenderVuMeter()
           → (Flash uniquement) flashHandleStateMachine()
 ```
@@ -88,7 +89,7 @@ Main.ino loop()
 Téléphone → Wi-Fi Cantaluz
   → portail captif ou http://cantaluz.local
   → WebAppHtml.h (PROGMEM)
-  → /api/status | /api/settings | /api/meditation/start | /api/meditation/stop
+  → /api/status | /api/settings | /api/meditation/start | /api/meditation/stop | /api/fifou/start | /api/fifou/stop
   → g.live + g.med (MeditationState) + modesSetActive()
 ```
 

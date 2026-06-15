@@ -33,7 +33,8 @@
 #define MODE_IMMEDIAT    0   // Flash
 #define MODE_LENT        1   // Standard
 #define MODE_MEDITATION  2   // Méditation guidée
-#define MODE_ACTIF       MODE_IMMEDIAT   // value: [MODE_IMMEDIAT | MODE_LENT | MODE_MEDITATION]
+#define MODE_DEFI_FIFOU  3   // Défi Fifou — jeu du calme
+#define MODE_ACTIF       MODE_IMMEDIAT   // value: [MODE_IMMEDIAT | MODE_LENT | MODE_MEDITATION | MODE_DEFI_FIFOU]
 
 // ═══════════════════════════════════════════════════════════════
 //  RUBAN WS2812B
@@ -91,7 +92,7 @@
 // ═══════════════════════════════════════════════════════════════
 //  MODE FLASH — VU + flashs bleus (MODE_IMMEDIAT)
 // ═══════════════════════════════════════════════════════════════
-#define MAX_BRIGHTNESS           100    // = Luminosité app (mode Flash)   value: [0 - 255]
+#define MAX_BRIGHTNESS           255   // = Luminosité app (mode Flash)   value: [0 - 255]
 #define ATTACK_PERCENT           8    // = Montée barre app (mode Flash)   value: [0 - 100]
 #define AVG_SMOOTH_PERCENT       30    // Lissage moyenne peak   value: [0 - 100]
 #define PEAK_SMOOTH_PERCENT      10    // Lissage paliers / flash   value: [0 - 100]
@@ -112,7 +113,7 @@
 //  MODE STANDARD — VU adouci, sans flash (MODE_LENT)
 //  Mêmes idées que Flash, valeurs plus calmes (préfixe LENT_).
 // ═══════════════════════════════════════════════════════════════
-#define LENT_MAX_BRIGHTNESS          50    // Luminosité app (mode Standard)
+#define LENT_MAX_BRIGHTNESS          150    // Luminosité app (mode Standard)
 #define LENT_ATTACK_PERCENT          8     // Montée barre app (mode Standard)
 #define LENT_AVG_SMOOTH_PERCENT      35
 #define LENT_PEAK_SMOOTH_PERCENT     50
@@ -162,6 +163,24 @@
 #define MEDIT_COLOR_DONE_R       0
 #define MEDIT_COLOR_DONE_G       180
 #define MEDIT_COLOR_DONE_B       80
+
+// ═══════════════════════════════════════════════════════════════
+//  DÉFI FIFOU — jeu du calme (séances 2 / 5 / 10 min, lancées dans l'app)
+// ═══════════════════════════════════════════════════════════════
+#define FIFOU_COUNTDOWN_SEC        5
+#define FIFOU_START_LEDS           20     // LED allumées au départ   value: [1 - LED_COUNT-1]
+#define FIFOU_CALM_RATIO_NUM       80     // Temps calme min = durée × NUM/DEN (ex. 2 min → 1 min 20)
+#define FIFOU_CALM_RATIO_DEN       120
+#define FIFOU_LOSS_GAIN_PERCENT    40     // Perte en rouge = % de la vitesse de gain en vert   value: [10 - 80]
+#define FIFOU_COUNTDOWN_BLINK_MAX_MS  600 // Clignotement lent au début du compte à rebours
+#define FIFOU_COUNTDOWN_BLINK_MIN_MS  80  // Clignotement rapide à la fin
+#define FIFOU_WIN_FIREWORKS_MS     10000  // Durée feu d'artifice victoire (~10 s)
+#define FIFOU_LOST_PULSE_MS        3000   // Durée clignotement rouge défaite
+#define FIFOU_LOST_PULSE_PERIOD_MS 350    // Période clignotement défaite
+// Couleur du jeu en cours (GRB) — cyan
+#define FIFOU_COLOR_R              0
+#define FIFOU_COLOR_G              200
+#define FIFOU_COLOR_B              255
 
 // ═══════════════════════════════════════════════════════════════
 //  WI-FI — réseau Cantaluz (téléphone)

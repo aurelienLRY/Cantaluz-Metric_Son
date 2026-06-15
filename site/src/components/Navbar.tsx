@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { ButtonLink } from "@/components/ui/button-link";
+import { PROJECT } from "@/lib/project";
 import { cn } from "@/lib/utils";
+import { Code2 } from "lucide-react";
 
 const links = [
   { href: "#projet", label: "Projet" },
-  { href: "#objectif", label: "Objectifs" },
+  { href: "#architecture", label: "Architecture" },
+  { href: "#cablage", label: "Câblage" },
   { href: "#boitier", label: "Boîtier" },
-  { href: "#application", label: "Application" },
+  { href: "#application", label: "App" },
   { href: "#modes", label: "Modes" },
+  { href: "#wiki", label: "Wiki" },
 ];
 
 export function Navbar() {
@@ -37,7 +41,7 @@ export function Navbar() {
             Cantaluz
           </span>
         </a>
-        <ul className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
+        <ul className="hidden items-center gap-5 text-sm text-muted-foreground lg:flex">
           {links.map((link) => (
             <li key={link.href}>
               <a
@@ -49,8 +53,16 @@ export function Navbar() {
             </li>
           ))}
         </ul>
-        <ButtonLink href="#application" size="sm" variant="secondary">
-          Voir l&apos;app
+        <ButtonLink
+          href={PROJECT.githubUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          size="sm"
+          variant="secondary"
+          className="gap-1.5"
+        >
+          <Code2 className="size-3.5" />
+          GitHub
         </ButtonLink>
       </nav>
     </header>

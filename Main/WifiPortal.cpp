@@ -16,6 +16,7 @@
 #include "LedStrip.h"
 #include "Modes.h"
 #include "ModeMeditation.h"
+#include "ModeDefiFifou.h"
 #include "MicSensor.h"
 #include "WebAppHtml.h"
 
@@ -102,7 +103,7 @@ static void wifiApplySettingsFromRequest() {
   }
   if (server.hasArg("mode")) {
     int m = server.arg("mode").toInt();
-    if (m == MODE_IMMEDIAT || m == MODE_LENT || m == MODE_MEDITATION) {
+    if (m == MODE_IMMEDIAT || m == MODE_LENT || m == MODE_MEDITATION || m == MODE_DEFI_FIFOU) {
       modesSetActive((uint8_t)m);
     }
   }
@@ -112,6 +113,7 @@ static void wifiApplySettingsFromRequest() {
 static const char *wifiModeLabel(uint8_t mode) {
   if (mode == MODE_LENT) return "Standard";
   if (mode == MODE_MEDITATION) return "Méditation guidée";
+  if (mode == MODE_DEFI_FIFOU) return "Défi Fifou";
   return "Flash";
 }
 
@@ -252,9 +254,34 @@ static void handleMeditationStop() {
   server.send(200, F("application/json"), F("{\"ok\":true}"));
 }
 
+static void handleFifouStart() {
+  if (g.live.activeMode != MODE_DEFI_FIFOU) {
+    server.send(400, F("application/json"), F("{\"ok\":false,\"err\":\"mode\"}"));
+    return;
+  }
+  uint16_t dur = MEDIT_DUR_5MIN_SEC;
+  if (server.hasArg("dur")) {
+    dur = (uint16_t)server.arg("dur").toInt();
+  }
+  if (dur != MEDIT_DUR_2MIN_SEC && dur != MEDIT_DUR_5MIN_SEC && dur != MEDIT_DUR_10MIN_SEC) {
+    dur = MEDIT_DUR_5MIN_SEC;
+  }
+  defiFifouStart(dur);
+  char buf[128];
+  snprintf(buf, sizeof(buf),
+    "{\"ok\":true,\"dur\":%u,\"countdown\":%u}",
+    (unsigned)dur, (unsigned)FIFOU_COUNTDOWN_SEC);
+  server.send(200, F("application/json"), buf);
+}
+
+static void handleFifouStop() {
+  defiFifouStop();
+  server.send(200, F("application/json"), F("{\"ok\":true}"));
+}
+
 static void handleStatus() {
   IPAddress ip = WiFi.softAPIP();
-  char buf[780];
+  char buf[1100];
   int displayPct = (int)(g.displayLevel * 100.0f + 0.5f);
   snprintf(buf, sizeof(buf),
     "{\"niveau\":%d,\"barre\":%d,\"display\":%.3f,"
@@ -264,6 +291,9 @@ static void handleStatus() {
     "\"mode\":%u,\"modeName\":\"%s\","
     "\"medPhase\":\"%s\",\"medCountdown\":%u,\"medElapsed\":%lu,\"medRemain\":%lu,"
     "\"medDur\":%lu,\"medRunning\":%s,\"medCounting\":%s,"
+    "\"fifouPhase\":\"%s\",\"fifouCountdown\":%u,\"fifouElapsed\":%lu,\"fifouRemain\":%lu,"
+    "\"fifouDur\":%lu,\"fifouLeds\":%d,\"fifouLedsMax\":%d,"
+    "\"fifouRunning\":%s,\"fifouCounting\":%s,"
     "\"ip\":\"%u.%u.%u.%u\",\"host\":\"%s.local\",\"ssid\":\"%s\"}",
     displayPct,
     displayPct,
@@ -288,6 +318,15 @@ static void handleStatus() {
     (unsigned long)(g.med.sessionDurMs / 1000UL),
     g.med.sessionActive ? "true" : "false",
     g.med.countdownActive ? "true" : "false",
+    defiFifouPhaseLabel(g.fifou.phase),
+    (unsigned)defiFifouCountdownRemainSec(),
+    (unsigned long)defiFifouSessionElapsedSec(),
+    (unsigned long)defiFifouSessionRemainSec(),
+    (unsigned long)(g.fifou.sessionDurMs / 1000UL),
+    defiFifouLitLedsInt(),
+    LED_COUNT,
+    g.fifou.sessionActive ? "true" : "false",
+    g.fifou.countdownActive ? "true" : "false",
     ip[0], ip[1], ip[2], ip[3],
     WIFI_MDNS_NAME,
     WIFI_AP_SSID);
@@ -413,6 +452,8 @@ void wifiPortalStartWeb() {
   server.on("/api/reset", handleReset);
   server.on("/api/meditation/start", handleMeditationStart);
   server.on("/api/meditation/stop", handleMeditationStop);
+  server.on("/api/fifou/start", handleFifouStart);
+  server.on("/api/fifou/stop", handleFifouStop);
 
 #if WIFI_CAPTIVE_PORTAL
   wifiRegisterCaptiveRoutes();

@@ -3,23 +3,23 @@
 import Image from "next/image";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { Card, CardContent } from "@/components/ui/card";
-import { Ear, HeartHandshake, Users } from "lucide-react";
+import { Hand, Layers, Users } from "lucide-react";
 
 const pillars = [
   {
-    icon: Ear,
-    title: "Pédagogique",
-    text: "On apprend à écouter et à se réguler — le bruit devient un sujet d'apprentissage concret.",
+    icon: Hand,
+    title: "Autonomie",
+    text: "L'enfant observe le signal, évalue la situation et agit par lui-même — l'adulte guide sans imposer.",
+  },
+  {
+    icon: Layers,
+    title: "Concret",
+    text: "La lumière rend tangible ce qui était invisible : une expérience sensorielle directe, à la manière du matériel Montessori.",
   },
   {
     icon: Users,
-    title: "Concret",
-    text: "Le signal LED est immédiat et lisible par tous les âges, sans formation complexe.",
-  },
-  {
-    icon: HeartHandshake,
-    title: "Collectif",
-    text: "L'outil améliore l'ambiance sans culpabiliser les enfants : un repère partagé par le groupe.",
+    title: "Coopération",
+    text: "Le groupe construit ensemble son cadre sonore — dans l'esprit Freinet de la vie communautaire et de la responsabilité partagée.",
   },
 ];
 
@@ -31,20 +31,21 @@ export function PourquoiSection() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="reveal font-heading text-3xl font-bold tracking-tight md:text-4xl">
-            Pourquoi c&apos;est utile
+            En phase avec les pédagogies actives
           </h2>
           <p className="reveal mt-5 text-lg leading-relaxed text-muted-foreground">
-            Le bruit excessif peut nuire à l&apos;attention, aux apprentissages
-            et au confort de tous dans une classe ou une cantine. En rendant ce
-            bruit visible, le vumètre aide les élèves à devenir{" "}
+            Cantaluz s&apos;inscrit dans une logique que partagent Montessori et
+            Freinet : donner aux enfants les moyens de{" "}
             <strong className="font-medium text-foreground">
-              acteurs de l&apos;ambiance sonore
-            </strong>{" "}
-            plutôt que simples exécutants des consignes adultes.
+              se réguler eux-mêmes
+            </strong>
+            , par l&apos;expérience et le travail collectif — plutôt que par
+            des rappels répétés de l&apos;adulte.
           </p>
           <p className="reveal mt-4 text-muted-foreground leading-relaxed">
-            Pour les équipes éducatives, c&apos;est un support simple à mettre en
-            place, facile à expliquer et immédiatement utile au quotidien.
+            L&apos;enseignant devient accompagnateur du groupe : il installe le
+            dispositif, propose des routines et laisse les enfants expérimenter,
+            s&apos;auto-évaluer et ajuster leur comportement au fil des séances.
           </p>
         </div>
 
@@ -66,7 +67,7 @@ export function PourquoiSection() {
 
         <div className="reveal mt-16 overflow-hidden rounded-2xl border border-border/60 shadow-md">
           <Image
-            src="/images/enfants.svg"
+            src="/images/cantine.webp"
             alt="Élèves en autonomie — photo à remplacer"
             width={800}
             height={500}

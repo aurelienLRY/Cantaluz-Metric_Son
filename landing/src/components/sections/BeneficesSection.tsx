@@ -3,10 +3,10 @@
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Brain,
+  Compass,
   Eye,
-  MessageCircleOff,
-  School,
+  Heart,
+  Leaf,
   Sparkles,
   UsersRound,
 } from "lucide-react";
@@ -14,33 +14,33 @@ import {
 const benefices = [
   {
     icon: Sparkles,
-    title: "Autonomie",
-    text: "Favoriser l'autonomie des élèves dans la gestion du bruit.",
+    title: "Autorégulation",
+    text: "Chaque enfant apprend à moduler sa voix en fonction d'un repère objectif — pas d'une menace extérieure.",
   },
   {
-    icon: School,
-    title: "Climat sonore",
-    text: "Améliorer le climat sonore dans les classes, couloirs et cantines.",
+    icon: Leaf,
+    title: "Climat apaisé",
+    text: "Un environnement sonore plus serein, propice à la concentration, à l'écoute et aux temps calmes.",
   },
   {
-    icon: MessageCircleOff,
-    title: "Moins de rappels",
-    text: "Réduire les rappels à l'ordre répétitifs et recentrer l'adulte sur l'accompagnement.",
+    icon: Heart,
+    title: "Relation bienveillante",
+    text: "L'adulte se libère des rappels à l'ordre pour se consacrer à l'accompagnement et à la médiation.",
   },
   {
     icon: Eye,
-    title: "Repère visuel",
-    text: "Installer un repère visuel commun, compris par tous les âges.",
+    title: "Prise de conscience",
+    text: "Le signal lumineux aide à nommer l'ambiance, à en parler et à co-construire des règles de vie.",
   },
   {
     icon: UsersRound,
-    title: "École inclusive",
-    text: "Soutenir une démarche d'école inclusive et d'autorégulation.",
+    title: "Vie collective",
+    text: "Le groupe apprend à prendre soin de son espace commun — cantine, classe ou atelier.",
   },
   {
-    icon: Brain,
-    title: "Attention",
-    text: "Contribuer à un environnement propice à la concentration et au calme.",
+    icon: Compass,
+    title: "Expérimentation",
+    text: "Les enfants testent, observent les effets de leurs actions et progressent à leur rythme.",
   },
 ];
 
@@ -56,11 +56,12 @@ export function BeneficesSection() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="reveal font-heading text-3xl font-bold tracking-tight md:text-4xl">
-            Bénéfices concrets au quotidien
+            Ce que cela change au quotidien
           </h2>
-          <p className="reveal mt-4 text-muted-foreground">
-            Le vumètre ne sanctionne pas : il accompagne l&apos;apprentissage du
-            calme, de l&apos;attention et du respect du groupe.
+          <p className="reveal mt-4 text-muted-foreground leading-relaxed">
+            Un dispositif qui respecte l&apos;enfant comme acteur de son
+            apprentissage : il voit, comprend, ajuste — et le groupe grandit
+            ensemble dans la responsabilité partagée.
           </p>
         </div>
 

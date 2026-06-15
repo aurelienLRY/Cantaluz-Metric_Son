@@ -38,8 +38,8 @@ export function ProjetSection() {
           <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-emerald-500/20 via-transparent to-rose-500/20 blur-2xl" />
           <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
             <Image
-              src="/images/classe.svg"
-              alt="Cantaluz en classe — placeholder"
+              src="/images/hero.webp"
+              alt="Cantaluz en classe"
               width={800}
               height={500}
               className="h-auto w-full object-cover"
@@ -61,9 +61,9 @@ export function ProjetSection() {
             <em>luz</em> (lumière) — la voix de la classe traduite en lumière.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Conçu comme projet pédagogique (électronique, programmation,
-            design d&apos;interface), l&apos;appareil reste utilisable au
-            quotidien en salle de classe.
+            Conçu comme projet pédagogique open source — électronique,
+            programmation embarquée et interface web — documenté sur GitHub
+            et utilisable au quotidien en salle de classe.
           </p>
 
           <div className="grid gap-4 pt-2 sm:grid-cols-1">

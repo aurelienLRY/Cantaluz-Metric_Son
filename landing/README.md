@@ -34,3 +34,17 @@ Ouvrir [http://localhost:3000](http://localhost:3000) — si le site technique t
 ## Stack
 
 Next.js 16 · Tailwind CSS v4 · shadcn/ui · GSAP ScrollTrigger
+
+## Déploiement cPanel (O2switch)
+
+Voir le guide détaillé : **[DEPLOY-CPANEL.md](./DEPLOY-CPANEL.md)**
+
+En résumé :
+
+```bash
+cd landing
+npm install
+npm run build
+```
+
+Puis uploadez le **contenu** du dossier `out/` dans `public_html/` sur cPanel.

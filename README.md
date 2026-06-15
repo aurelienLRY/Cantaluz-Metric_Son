@@ -13,8 +13,8 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
 | **Carte** | WeMos D1 R1 / R2 / mini (ESP8266) |
 | **Micro** | MAX4466 (GY) sur **A0** |
 | **LED** | Ruban WS2812B sur **D2** (GPIO4) |
-| **Modes** | **Flash**, **Standard**, **Méditation guidée** (respiration sur le ruban) |
-| **Réglages** | `Main/Config.h` au boot ; seuils et luminosité aussi via l’app web (jusqu’au redémarrage) |
+| **Modes** | **Flash**, **Standard**, **Méditation guidée**, **Défi Fifou** (jeu du calme) |
+| **Réglages** | `Main/Config.h` au boot ; sensibilité et seuils aussi via l’app web (jusqu’au redémarrage) |
 | **Wi-Fi** | `Cantaluz` / `cantaluz1` → `http://cantaluz.local` ou `192.168.4.1` (portail captif) |
 
 ```
@@ -62,10 +62,11 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
    - Se connecter au Wi-Fi **`Cantaluz`** (mot de passe : `cantaluz1`).
    - L’**app** s’ouvre via le portail captif, ou ouvrir **Chrome** sur `http://cantaluz.local` / `192.168.4.1`.
    - Slogan : *« Outil d’accompagnement au calme. »*
-   - **Dashboard** : graphique d’ambiance (30 s), barre VU, choix du mode **Flash**, **Standard** ou **Méditation guidée**.
-   - **Méditation guidée** : choisir **2 / 5 / 10 min**, bouton **Démarrer** → compte à rebours 5 s puis chrono ; phases Inspire / Retiens / Expire sur le ruban (LED une par une).
-   - **Réglages** : zone calme, zone animée, luminosité, montée de la barre ; bouton **↺** = valeur par défaut (`Config.h`) ; **i** = bulle d’aide.
-   - Les réglages web s’appliquent tout de suite sur le ruban ; au **redémarrage** de la carte, c’est `Config.h` qui reprend la main.
+   - **Dashboard** : graphique d’ambiance (30 s), barre VU, choix du mode **Flash**, **Standard**, **Méditation guidée** ou **Défi Fifou**.
+   - **Méditation guidée** : choisir **2 / 5 / 10 min**, bouton **Démarrer** → compte à rebours 5 s puis chrono ; phases **cyan** (inspire) → **ambre** (retiens) → **magenta** (expire) → **lavande** (air bloqué) ; LED une par une ; micro ignoré.
+   - **Défi Fifou** : choisir **2 / 5 / 10 min**, **Démarrer** → compte à rebours 5 s (clignotement accéléré) puis chrono ; **20 LED cyan** au départ ; **calme** = gain · **animé** = statu quo · **intense** = perte ; victoire = feu d’artifice (~10 s) · défaite = clignotement rouge.
+   - **Réglages** : sensibilité, zone calme, zone animée, luminosité, montée de la barre ; bouton **↺** = valeur par défaut (`Config.h`) ; **i** = bulle d’aide. *Grisé en Méditation et Défi Fifou.*
+   - Les réglages web partent après **Enregistrer** dans l’onglet Réglages ; au **redémarrage** de la carte, c’est `Config.h` qui reprend la main.
    - **Ne pas** laisser le moniteur série ouvert en usage normal (sature l’ESP8266).
 
 ### Test Wi-Fi matériel (si aucun réseau visible)
@@ -101,7 +102,7 @@ Tous les paramètres utilisateur sont dans **`Main/Config.h`**, documentés ains
 | Document | Contenu |
 |----------|---------|
 | [FICHE_UTILISATEUR.md](FICHE_UTILISATEUR.md) | **Fiche A4** — utilisation en classe (modes, app, démarrage) |
-| [Main/PARAMETRES.md](Main/PARAMETRES.md) | Modes Flash/Standard, app web, sections `Config.h` |
+| [Main/PARAMETRES.md](Main/PARAMETRES.md) | Quatre modes, app web, sections `Config.h` (dont `FIFOU_*`, `MED_*`) |
 | [Main/FICHIERS.md](Main/FICHIERS.md) | Architecture du code, flux boot / boucle / API |
 
 **Ne pas modifier** le code des modules pour un simple réglage : tout passe par `Config.h`.
@@ -116,9 +117,11 @@ Cantaluz/
     ├── Main.ino              ← point d'entrée (setup / loop)
     ├── Config.h              ← réglages par défaut (boot)
     ├── AppState.*            ← état global + LiveConfig (web)
-    ├── Modes.*               ← dispatch Flash / Standard
+    ├── Modes.*               ← dispatch Flash / Standard / Méditation / Défi Fifou
     ├── ModeImmediat.*        ← mode Flash (VU + flash bleu)
+    ├── ModeLent.*            ← mode Standard (VU adouci)
     ├── ModeMeditation.*      ← mode Méditation guidée (respiration)
+    ├── ModeDefiFifou.*       ← mode Défi Fifou (jeu du calme)
     ├── MicSensor.*           ← micro + barre VU
     ├── LedStrip.*            ← ruban WS2812B
     ├── FlashEtat.*           ← flashs bleus (mode Flash)
@@ -126,6 +129,8 @@ Cantaluz/
     ├── WebAppHtml.h          ← interface mobile (Dashboard / Réglages)
     └── …
 WifiMinimal/                  ← test Wi-Fi matériel seul (Cantaluz_TEST)
+site/                         ← site wiki technique (Next.js)
+landing/                      ← site marketing (Next.js)
 ```
 
 ---
@@ -136,9 +141,10 @@ WifiMinimal/                  ← test Wi-Fi matériel seul (Cantaluz_TEST)
 |-------------------|----------|--------------|
 | **Flash** | `MODE_IMMEDIAT` | VU réactif ; montée vert → orange → rouge → **flashs bleus** |
 | **Standard** | `MODE_LENT` | Vu-mètre fluide selon l’ambiance ; **pas de flash** ; paramètres `LENT_*` |
-| **Méditation guidée** | `MODE_MEDITATION` | Séance respiration : **cyan** inspire → **ambre** retiens → **magenta** expire ; micro ignoré |
+| **Méditation guidée** | `MODE_MEDITATION` | Séance respiration : **cyan** inspire → **ambre** retiens → **magenta** expire → **lavande** air bloqué ; micro ignoré |
+| **Défi Fifou** | `MODE_DEFI_FIFOU` | Jeu du calme : 20 LED **cyan** ; gain en calme / statu quo animé / perte en intense ; victoire = feu d’artifice (~10 s), défaite = clignotement rouge |
 
-Commun aux deux modes :
+Commun aux modes Flash et Standard :
 
 1. **Boot** — ruban bleu, animation VU verte (sans attente silence).
 2. **Barre VU** — hauteur selon le volume ; descente après quelques secondes sous la moyenne.

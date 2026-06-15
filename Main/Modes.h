@@ -9,7 +9,8 @@
  *   modesLoop()   →  à chaque tour (loop Arduino)
  *
  * Le mode réel est choisi dans Config.h (MODE_ACTIF).
- * Modes : MODE_IMMEDIAT (Flash), MODE_LENT (Standard), MODE_MEDITATION (Méditation guidée).
+ * Modes : MODE_IMMEDIAT (Flash), MODE_LENT (Standard), MODE_MEDITATION (Méditation guidée),
+ *         MODE_DEFI_FIFOU (Défi Fifou).
  *
  * Ajouter un nouveau mode :
  *   1. BruitLedMode dans Types.h
