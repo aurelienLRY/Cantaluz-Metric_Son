@@ -4,7 +4,7 @@
  *
  * Où régler quoi ?
  * ----------------
- *   Carte / matériel / méditation / Wi-Fi  → ici (Config.h)
+ *   Carte ESP32-WROOM-32U / matériel / méditation / Wi-Fi  → ici (Config.h)
  *   En classe, à la volée                  → app Réglages (LiveConfig, voir ci-dessous)
  *
  * Correspondance app ↔ Config.h (valeurs par défaut au boot) :
@@ -30,29 +30,30 @@
 // ═══════════════════════════════════════════════════════════════
 //  MODE AU DÉMARRAGE
 // ═══════════════════════════════════════════════════════════════
-#define MODE_IMMEDIAT    0   // Flash
-#define MODE_LENT        1   // Standard
-#define MODE_MEDITATION  2   // Méditation guidée
-#define MODE_DEFI_FIFOU  3   // Défi Fifou — jeu du calme
-#define MODE_ACTIF       MODE_IMMEDIAT   // value: [MODE_IMMEDIAT | MODE_LENT | MODE_MEDITATION | MODE_DEFI_FIFOU]
+#define MODE_IMMEDIAT 0           // Flash
+#define MODE_LENT 1               // Standard
+#define MODE_MEDITATION 2         // Méditation guidée
+#define MODE_DEFI_FIFOU 3         // Défi Fifou — jeu du calme
+#define MODE_ACTIF MODE_IMMEDIAT  // value: [MODE_IMMEDIAT | MODE_LENT | MODE_MEDITATION | MODE_DEFI_FIFOU]
 
 // ═══════════════════════════════════════════════════════════════
 //  RUBAN WS2812B
 // ═══════════════════════════════════════════════════════════════
-#define LEDS_PER_METER    55
-#define STRIP_LENGTH_M     5
-#define LED_COUNT          (LEDS_PER_METER * STRIP_LENGTH_M)  // test court : mettre 17
-#define LED_PIN            4     // D2 sur WeMos D1
-#define MIN_LEDS_ON        5     // LED allumées minimum au silence   value: [1 - 50]
+#define LEDS_PER_METER 55
+#define STRIP_LENGTH_M 5
+#define LED_COUNT (LEDS_PER_METER * STRIP_LENGTH_M)  // test court : mettre 17
+#define LED_PIN 4                                    // GPIO4 — DIN du ruban WS2812B
+#define MIN_LEDS_ON 5                                // LED allumées minimum au silence   value: [1 - 50]
 
 // ═══════════════════════════════════════════════════════════════
 //  MICRO — matériel + sensibilité (app : curseur Sensibilité)
+//  ESP32-WROOM-32U : GPIO34 = ADC1 (entrée seule), alim micro en 3,3 V
 // ═══════════════════════════════════════════════════════════════
-#define MIC_PIN              A0
-#define SAMPLE_COUNT         24    // 64 possible sans Wi-Fi   value: [8 - 256]
-#define SAMPLE_DELAY_US      200   // value: [50 - 1000]
+#define MIC_PIN 34           // GPIO34 — sortie OUT du MAX4466
+#define SAMPLE_COUNT 24      // 64 possible sans Wi-Fi   value: [8 - 256]
+#define SAMPLE_DELAY_US 200  // value: [50 - 1000]
 
-#define DEFAULT_SENSITIVITY  8     // Défaut curseur app 0–100   value: [0 - 100]
+#define DEFAULT_SENSITIVITY 4  // Défaut curseur app 0–100   value: [0 - 100]
 
 // ── Cartographie curseur Sensibilité (app) → micro (MicSensor.cpp) ──
 // s = g.live.sensitivity (0 = peu sensible, 100 = très sensible)
@@ -65,16 +66,16 @@
 //   barre % = eff / micSpan              ← hauteur vu-mètre
 //
 // Exemples (raw = variation max-min du micro sur une mesure) :
-//   s=0  → gate 110, span 720 : raw 100 → eff 0 ; raw 200 → barre ~12 %
+//   s=0  → gate 145, span 900 : bruit de fond mieux filtré, barre plus stable
 //   s=8  → gate 102, span 680 : raw 25  → eff 0 (silence typique)
 //   s=100→ gate 10,  span 220 : raw 50  → eff 40 → barre ~18 %
 //
-#define MIC_SENS_GATE_MIN    10    // Porte (gate) quand s=100 : bruit minimal filtré   value: [0 - 80]
-#define MIC_SENS_GATE_MAX    110   // Porte quand s=0 : ignore davantage le bruit de fond   value: [50 - 200]
-#define MIC_SENS_SPAN_MIN    220   // Peak eff. pour barre 100 % quand s=100 (voix proche)   value: [100 - 400]
-#define MIC_SENS_SPAN_MAX    720   // Peak eff. pour barre 100 % quand s=0 (voix très forte)   value: [400 - 900]
-#define MIC_SENS_DB_MIN      8     // Zone morte barre quand s=100 (montée facile)   value: [0 - 20]
-#define MIC_SENS_DB_MAX      35     // Zone morte quand s=0 (barre stable au silence)   value: [15 - 60]
+#define MIC_SENS_GATE_MIN 10   // Porte (gate) quand s=100 : bruit minimal filtré   value: [0 - 80]
+#define MIC_SENS_GATE_MAX 145  // Porte quand s=0 : ignore davantage le bruit de fond   value: [50 - 200]
+#define MIC_SENS_SPAN_MIN 220  // Peak eff. pour barre 100 % quand s=100 (voix proche)   value: [100 - 400]
+#define MIC_SENS_SPAN_MAX 900  // Peak eff. pour barre 100 % quand s=0 (voix très forte)   value: [400 - 900]
+#define MIC_SENS_DB_MIN 8      // Zone morte barre quand s=100 (montée facile)   value: [0 - 20]
+#define MIC_SENS_DB_MAX 55     // Zone morte barre quand s=0 (barre stable au silence)   value: [15 - 60]
 // Ne pas confondre avec ADC_FIN_ZONE_VERT / ORANGE (Zone calme / animée sur le ruban).
 
 // ═══════════════════════════════════════════════════════════════
@@ -82,122 +83,126 @@
 //  Peak EFFECTIF (eff) après porte de sensibilité — pas le raw du moniteur série.
 //  Répartition vert|orange|rouge le long du bandeau : proportion de ces seuils.
 // ═══════════════════════════════════════════════════════════════
-#define ADC_PLAGE_MIN        0
-#define ADC_PLAGE_MAX        1023
-#define ADC_FIN_ZONE_VERT    400   // = Zone calme (défaut app)   value: [0 - 1022]
-#define ADC_FIN_ZONE_ORANGE  700   // = Zone animée (défaut app)   value: [vert+1 - 1023]
-#define ADC_HYST_VERT        80    // Anti-rebond descente palier   value: [0 - 500]
-#define ADC_HYST_ORANGE      80
+#define ADC_PLAGE_MIN 0
+#define ADC_PLAGE_MAX 1023
+#define ADC_FIN_ZONE_VERT 580    // = Zone calme (défaut app)   value: [0 - 1022]
+#define ADC_FIN_ZONE_ORANGE 880  // = Zone animée (défaut app)   value: [vert+1 - 1023]
+#define ADC_HYST_VERT 100        // Anti-rebond descente palier   value: [0 - 500]
+#define ADC_HYST_ORANGE 100
 
 // ═══════════════════════════════════════════════════════════════
 //  MODE FLASH — VU + flashs bleus (MODE_IMMEDIAT)
 // ═══════════════════════════════════════════════════════════════
-#define MAX_BRIGHTNESS           255   // = Luminosité app (mode Flash)   value: [0 - 255]
-#define ATTACK_PERCENT           8    // = Montée barre app (mode Flash)   value: [0 - 100]
-#define AVG_SMOOTH_PERCENT       30    // Lissage moyenne peak   value: [0 - 100]
-#define PEAK_SMOOTH_PERCENT      10    // Lissage paliers / flash   value: [0 - 100]
-#define DESCENT_DELAY_SEC        1    // Attente avant descente barre   value: [0 - 120]
-#define DESCENT_DURATION_SEC     4    // Durée pour vider la barre   value: [1 - 600]
+#define MAX_BRIGHTNESS 255      // = Luminosité app (mode Flash)   value: [0 - 255]
+#define ATTACK_PERCENT 8        // = Montée barre app (mode Flash)   value: [0 - 100]
+#define AVG_SMOOTH_PERCENT 45   // Lissage moyenne peak   value: [0 - 100]
+#define PEAK_SMOOTH_PERCENT 10  // Lissage paliers / flash   value: [0 - 100]
+#define DESCENT_DELAY_SEC 1     // Attente avant descente barre   value: [0 - 120]
+#define DESCENT_DURATION_SEC 3  // Durée pour vider la barre   value: [1 - 600]
 
-#define STATE_HOLD_MS            450   // Maintien seuil avant flash   value: [0 - 5000]
-#define FLASH_HOLD_RESET_MS      400   // value: [0 - 5000]
-#define TRANSITION_COOLDOWN_SEC  3     // Entre deux séries de flashs   value: [0 - 10]
-#define FLASH_COUNT              3     // value: [1 - 20]
-#define FLASH_ON_MS              120   // value: [20 - 2000]
-#define FLASH_OFF_MS             120   // value: [20 - 2000]
+#define STATE_HOLD_MS 450          // Maintien seuil avant flash   value: [0 - 5000]
+#define FLASH_HOLD_RESET_MS 400    // value: [0 - 5000]
+#define TRANSITION_COOLDOWN_SEC 3  // Entre deux séries de flashs   value: [0 - 10]
+#define FLASH_COUNT 3              // value: [1 - 20]
+#define FLASH_ON_MS 120            // value: [20 - 2000]
+#define FLASH_OFF_MS 120           // value: [20 - 2000]
 
-#define BOOT_BLUE_MS             800   // Bleu au boot   value: [0 - 10000]
-#define BOOT_VU_SPEED_PERCENT    75    // Animation VU boot   value: [5 - 100]
+#define BOOT_BLUE_MS 800          // Bleu au boot   value: [0 - 10000]
+#define BOOT_VU_SPEED_PERCENT 75  // Animation VU boot   value: [5 - 100]
 
 // ═══════════════════════════════════════════════════════════════
 //  MODE STANDARD — VU adouci, sans flash (MODE_LENT)
 //  Mêmes idées que Flash, valeurs plus calmes (préfixe LENT_).
 // ═══════════════════════════════════════════════════════════════
-#define LENT_MAX_BRIGHTNESS          150    // Luminosité app (mode Standard)
-#define LENT_ATTACK_PERCENT          8     // Montée barre app (mode Standard)
-#define LENT_AVG_SMOOTH_PERCENT      35
-#define LENT_PEAK_SMOOTH_PERCENT     50
-#define LENT_DESCENT_DELAY_SEC       6
-#define LENT_DESCENT_DURATION_SEC    60
-#define LENT_BOOT_BLUE_MS            0     // 0 = pas de bleu au boot
-#define LENT_BOOT_VU_SPEED_PERCENT   20
+#define LENT_MAX_BRIGHTNESS 150  // Luminosité app (mode Standard)
+#define LENT_ATTACK_PERCENT 8    // Montée barre app (mode Standard)
+#define LENT_AVG_SMOOTH_PERCENT 35
+#define LENT_PEAK_SMOOTH_PERCENT 50
+#define LENT_DESCENT_DELAY_SEC 1
+#define LENT_DESCENT_DURATION_SEC 15
+#define LENT_BOOT_BLUE_MS 0  // 0 = pas de bleu au boot
+#define LENT_BOOT_VU_SPEED_PERCENT 20
 
 // ═══════════════════════════════════════════════════════════════
-//  MÉDITATION GUIDÉE — séances 2 / 5 / 10 min (réglé dans l'app, pas ici)
+//  MÉDITATION GUIDÉE — séances 1 / 2 / 5 min (rythme adapté CP ~6 ans, réglé dans l'app)
+//  Références : respiration paire 3-3 s (K-5) ; expir prolongée légère ; apnées courtes.
 // ═══════════════════════════════════════════════════════════════
-#define MEDIT_COUNTDOWN_SEC      5
-#define MEDIT_DUR_2MIN_SEC       120
-#define MEDIT_DUR_5MIN_SEC       300
-#define MEDIT_DUR_10MIN_SEC      600
-// Profil 2 min
-#define MEDIT_P0_INSPIRE_SEC     4
-#define MEDIT_P0_HOLD_SEC        2
-#define MEDIT_P0_EXPIRE_SEC      5
-#define MEDIT_P0_HOLD_EMPTY_SEC  2
-#define MEDIT_P0_PAUSE_SEC       1
-// Profil 5 min
-#define MEDIT_P1_INSPIRE_SEC     5
-#define MEDIT_P1_HOLD_SEC        3
-#define MEDIT_P1_EXPIRE_SEC      6
-#define MEDIT_P1_HOLD_EMPTY_SEC  2
-#define MEDIT_P1_PAUSE_SEC       1
-// Profil 10 min
-#define MEDIT_P2_INSPIRE_SEC     6
-#define MEDIT_P2_HOLD_SEC        4
-#define MEDIT_P2_EXPIRE_SEC      7
-#define MEDIT_P2_HOLD_EMPTY_SEC  3
-#define MEDIT_P2_PAUSE_SEC       2
+#define MEDIT_COUNTDOWN_SEC 5
+#define MEDIT_DUR_1MIN_SEC 60
+#define MEDIT_DUR_2MIN_SEC 120
+#define MEDIT_DUR_5MIN_SEC 300
+// Profil 1 min — cycle ~9 s
+#define MEDIT_P0_INSPIRE_SEC 3
+#define MEDIT_P0_HOLD_SEC 1
+#define MEDIT_P0_EXPIRE_SEC 3
+#define MEDIT_P0_HOLD_EMPTY_SEC 1
+#define MEDIT_P0_PAUSE_SEC 1
+// Profil 2 min — cycle ~11 s (expire un peu plus long = apaisant)
+#define MEDIT_P1_INSPIRE_SEC 3
+#define MEDIT_P1_HOLD_SEC 2
+#define MEDIT_P1_EXPIRE_SEC 4
+#define MEDIT_P1_HOLD_EMPTY_SEC 1
+#define MEDIT_P1_PAUSE_SEC 1
+// Profil 5 min — même rythme que 2 min, séance plus longue
+#define MEDIT_P2_INSPIRE_SEC 3
+#define MEDIT_P2_HOLD_SEC 2
+#define MEDIT_P2_EXPIRE_SEC 4
+#define MEDIT_P2_HOLD_EMPTY_SEC 1
+#define MEDIT_P2_PAUSE_SEC 1
 // Couleurs respiration (GRB)
-#define MEDIT_COLOR_IN_R         0
-#define MEDIT_COLOR_IN_G         200
-#define MEDIT_COLOR_IN_B         255
-#define MEDIT_COLOR_HOLD_R       255
-#define MEDIT_COLOR_HOLD_G       160
-#define MEDIT_COLOR_HOLD_B       0
-#define MEDIT_COLOR_OUT_R        255
-#define MEDIT_COLOR_OUT_G        0
-#define MEDIT_COLOR_OUT_B        180
-#define MEDIT_COLOR_EMPTY_R      220
-#define MEDIT_COLOR_EMPTY_G      220
-#define MEDIT_COLOR_EMPTY_B      255
-#define MEDIT_COLOR_DONE_R       0
-#define MEDIT_COLOR_DONE_G       180
-#define MEDIT_COLOR_DONE_B       80
+#define MEDIT_COLOR_IN_R 0
+#define MEDIT_COLOR_IN_G 200
+#define MEDIT_COLOR_IN_B 255
+#define MEDIT_COLOR_HOLD_R 255
+#define MEDIT_COLOR_HOLD_G 160
+#define MEDIT_COLOR_HOLD_B 0
+#define MEDIT_COLOR_OUT_R 255
+#define MEDIT_COLOR_OUT_G 0
+#define MEDIT_COLOR_OUT_B 180
+#define MEDIT_COLOR_EMPTY_R 220
+#define MEDIT_COLOR_EMPTY_G 220
+#define MEDIT_COLOR_EMPTY_B 255
+#define MEDIT_COLOR_DONE_R 0
+#define MEDIT_COLOR_DONE_G 180
+#define MEDIT_COLOR_DONE_B 80
 
 // ═══════════════════════════════════════════════════════════════
-//  DÉFI FIFOU — jeu du calme (séances 2 / 5 / 10 min, lancées dans l'app)
+//  DÉFI FIFOU — jeu du calme (séances 1 / 2 / 5 min, lancées dans l'app)
 // ═══════════════════════════════════════════════════════════════
-#define FIFOU_COUNTDOWN_SEC        5
-#define FIFOU_START_LEDS           20     // LED allumées au départ   value: [1 - LED_COUNT-1]
-#define FIFOU_CALM_RATIO_NUM       80     // Temps calme min = durée × NUM/DEN (ex. 2 min → 1 min 20)
-#define FIFOU_CALM_RATIO_DEN       120
-#define FIFOU_LOSS_GAIN_PERCENT    40     // Perte en rouge = % de la vitesse de gain en vert   value: [10 - 80]
-#define FIFOU_COUNTDOWN_BLINK_MAX_MS  600 // Clignotement lent au début du compte à rebours
-#define FIFOU_COUNTDOWN_BLINK_MIN_MS  80  // Clignotement rapide à la fin
-#define FIFOU_WIN_FIREWORKS_MS     10000  // Durée feu d'artifice victoire (~10 s)
-#define FIFOU_LOST_PULSE_MS        3000   // Durée clignotement rouge défaite
+#define FIFOU_DUR_1MIN_SEC 60
+#define FIFOU_DUR_2MIN_SEC 120
+#define FIFOU_DUR_5MIN_SEC 300
+#define FIFOU_COUNTDOWN_SEC 5
+#define FIFOU_START_LEDS 20      // LED allumées au départ   value: [1 - LED_COUNT-1]
+#define FIFOU_CALM_RATIO_NUM 80  // Temps calme min = durée × NUM/DEN (ex. 1 min → 40 s, 2 min → 1 min 20)
+#define FIFOU_CALM_RATIO_DEN 120
+#define FIFOU_LOSS_GAIN_PERCENT 40        // Perte en rouge = % de la vitesse de gain en vert   value: [10 - 80]
+#define FIFOU_COUNTDOWN_BLINK_MAX_MS 600  // Clignotement lent au début du compte à rebours
+#define FIFOU_COUNTDOWN_BLINK_MIN_MS 80   // Clignotement rapide à la fin
+#define FIFOU_WIN_FIREWORKS_MS 10000      // Durée feu d'artifice victoire (~10 s)
+#define FIFOU_LOST_PULSE_MS 3000          // Durée clignotement rouge défaite
 #define FIFOU_LOST_PULSE_PERIOD_MS 350    // Période clignotement défaite
 // Couleur du jeu en cours (GRB) — cyan
-#define FIFOU_COLOR_R              0
-#define FIFOU_COLOR_G              200
-#define FIFOU_COLOR_B              255
+#define FIFOU_COLOR_R 0
+#define FIFOU_COLOR_G 200
+#define FIFOU_COLOR_B 255
 
 // ═══════════════════════════════════════════════════════════════
 //  WI-FI — réseau Cantaluz (téléphone)
 // ═══════════════════════════════════════════════════════════════
-#define WIFI_ENABLE            1
-#define WIFI_OPEN_NETWORK      0
-#define WIFI_AP_SSID           "Cantaluz"
-#define WIFI_AP_PASS           "cantaluz1"
-#define WIFI_AP_CHANNEL        6     // value: [1 - 13]
-#define WIFI_HTTP_PORT         80
-#define WIFI_MDNS_NAME         "cantaluz"
-#define WIFI_CAPTIVE_PORTAL    1
+#define WIFI_ENABLE 1
+#define WIFI_OPEN_NETWORK 0
+#define WIFI_AP_SSID "Cantaluz"
+#define WIFI_AP_PASS "cantaluz1"
+#define WIFI_AP_CHANNEL 6  // value: [1 - 13]
+#define WIFI_HTTP_PORT 80
+#define WIFI_MDNS_NAME "cantaluz"
+#define WIFI_CAPTIVE_PORTAL 1
 
 // ═══════════════════════════════════════════════════════════════
-//  DEBUG — garder commenté avec Wi-Fi / usage téléphone
+//  DEBUG — moniteur série 115200 (désactiver plus tard si besoin)
 // ═══════════════════════════════════════════════════════════════
-//#define DEBUG_SERIAL
-#define SERIAL_BAUD            115200
-#define DEBUG_INTERVAL_MS      5000
-#define LOOP_MIN_PERIOD_MS     25
+#define DEBUG_SERIAL
+#define SERIAL_BAUD 115200
+#define DEBUG_INTERVAL_MS 5000
+#define LOOP_MIN_PERIOD_MS 25

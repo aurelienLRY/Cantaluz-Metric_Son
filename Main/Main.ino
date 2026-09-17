@@ -1,13 +1,14 @@
 /*
- * Main.ino — Point d'entrée Arduino Cantaluz (WeMos D1 / ESP8266)
+ * Main.ino — Point d'entrée Arduino Cantaluz (ESP32-WROOM-32U)
  *
  * Matériel :
- *   - Micro MAX4466 sur A0
- *   - Ruban WS2812B sur D2 (GPIO4), alim 5 V externe, GND commun
+ *   - Micro MAX4466 sur GPIO34 (ADC1), alim 3,3 V
+ *   - Ruban WS2812B sur GPIO4, alim 5 V externe, GND commun
+ *   - Antenne U.FL branchée (obligatoire pour le Wi-Fi)
  *
  * À quoi sert ce fichier ?
  * ------------------------
- * Très court : initialise les broches, le port série (debug), puis délègue
+ * Très court : initialise l'ADC, les broches, le port série (debug), puis délègue
  * tout le travail à Modes.cpp selon MODE_ACTIF dans Config.h.
  *
  * Fichiers du projet (ordre logique) :
@@ -35,20 +36,26 @@
 #include "WifiPortal.h"
 
 void setup() {
-#if defined(DEBUG_SERIAL) || WIFI_ENABLE
+#ifdef DEBUG_SERIAL
   Serial.begin(SERIAL_BAUD);
   delay(1000);
 #endif
+
+  // ADC 10 bits (0–1023) pour rester aligné avec les seuils de Config.h
+  analogReadResolution(10);
+  analogSetPinAttenuation(MIC_PIN, ADC_11db);
 
   pinMode(MIC_PIN, INPUT);
   pinMode(LED_PIN, OUTPUT);
 
 #ifdef DEBUG_SERIAL
-  Serial.println(F("=== Cantaluz ==="));
+  Serial.println(F("=== Cantaluz (ESP32) ==="));
 #if MODE_ACTIF == MODE_LENT
   Serial.println(F("Mode: LENT (Standard)"));
 #elif MODE_ACTIF == MODE_MEDITATION
   Serial.println(F("Mode: MEDITATION GUIDEE"));
+#elif MODE_ACTIF == MODE_DEFI_FIFOU
+  Serial.println(F("Mode: DEFI FIFOU"));
 #elif MODE_ACTIF == MODE_IMMEDIAT
   Serial.println(F("Mode: IMMEDIAT"));
 #else
@@ -59,8 +66,9 @@ void setup() {
   modesSetup();
 
 #if WIFI_ENABLE
-  // Wi-Fi après init ruban : FastLED / boot long peuvent couper un AP démarré trop tôt
+#ifdef DEBUG_SERIAL
   Serial.println(F("Demarrage WiFi (apres init ruban)..."));
+#endif
   wifiPortalStartRadio();
   wifiPortalStartWeb();
 #endif

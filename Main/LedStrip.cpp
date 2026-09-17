@@ -97,7 +97,6 @@ void ledAfficherBleuComplet(uint16_t dureeMs) {
   for (uint16_t t = 0; t < dureeMs; t += 50) {
     delay(50);
     yield();
-    ESP.wdtFeed();
   }
 }
 
@@ -112,13 +111,11 @@ void ledRunBootSequence() {
     ledRenderVuMeter(l);
     delay(g.run.bootStepMs);
     yield();
-    ESP.wdtFeed();
   }
   for (float l = 1.0f; l >= (float)MIN_LEDS_ON / (float)LED_COUNT; l -= 0.012f) {
     ledRenderVuMeter(l);
     delay(g.run.bootStepMs + 4);
     yield();
-    ESP.wdtFeed();
   }
 
   g.displayLevel = (float)MIN_LEDS_ON / (float)LED_COUNT;

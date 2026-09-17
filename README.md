@@ -4,15 +4,17 @@
 
 Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineuse vivante : un ruban LED qui monte avec le volume et change de palier — vert, orange, rouge — avec des flashs bleus à chaque montée d’intensité. Le nom vient de l’occitan *canta* (chanter) et *luz* (lumière).
 
+Cette branche cible exclusivement l’**ESP32-WROOM-32U** (antenne externe U.FL).
+
 ---
 
 ## Aperçu
 
 | | |
 |---|---|
-| **Carte** | WeMos D1 R1 / R2 / mini (ESP8266) |
-| **Micro** | MAX4466 (GY) sur **A0** |
-| **LED** | Ruban WS2812B sur **D2** (GPIO4) |
+| **Carte** | ESP32-WROOM-32U (DevKit / module à antenne **U.FL**) |
+| **Micro** | MAX4466 (GY) sur **GPIO34** (ADC1), alim **3,3 V** |
+| **LED** | Ruban WS2812B sur **GPIO4** |
 | **Modes** | **Flash**, **Standard**, **Méditation guidée**, **Défi Fifou** (jeu du calme) |
 | **Réglages** | `Main/Config.h` au boot ; sensibilité et seuils aussi via l’app web (jusqu’au redémarrage) |
 | **Wi-Fi** | `Cantaluz` / `cantaluz1` → `http://cantaluz.local` ou `192.168.4.1` (portail captif) |
@@ -28,10 +30,10 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
 
 ## Matériel
 
-- WeMos **D1 R1**, D1 R2 ou D1 mini (ESP8266, pilote CH340G ou CP2102)
-- Module micro **MAX4466** → broche **A0**
-- Ruban **WS2812B** 5 V (ex. 60 LED/m × 5 m = 300 LED)
-  - Données : **D2** + résistance **470 Ω** en série
+- Carte **ESP32-WROOM-32U** (antenne **U.FL** fournie à brancher)
+- Module micro **MAX4466** → **GPIO34**, VCC en **3,3 V** (pas 5 V)
+- Ruban **WS2812B** 5 V (ex. 60 LED/m × 5 m)
+  - Données : **GPIO4** + résistance **470 Ω** en série
   - Alimentation **5 V externe** obligatoire pour le ruban
   - **GND commun** entre carte et alim ruban
 - Bibliothèque Arduino : [FastLED](https://github.com/FastLED/FastLED)
@@ -40,54 +42,131 @@ Cantaluz transforme la voix, la musique et le bruit ambiant en une barre lumineu
 
 ---
 
-## Installation rapide
+## 1. Logiciel à installer (pour injecter le programme)
 
-1. Cloner le dépôt et ouvrir le dossier **`Main`** dans l’IDE Arduino (sketch `Main.ino`).
-2. Installer **FastLED** (Gestionnaire de bibliothèques).
-3. Carte dans l’IDE : **LOLIN(WEMOS) D1 R1** (votre carte) — *ne pas* utiliser « Generic ESP8266 ».
-4. Menu **Outils** (avec D1 R1 sélectionnée) :
+Tu n’as **pas** besoin d’esptool en ligne de commande. Un seul logiciel suffit pour compiler et envoyer le firmware :
+
+### Étape A — Arduino IDE 2
+
+1. Télécharger et installer **[Arduino IDE 2](https://www.arduino.cc/en/software)** (Windows).
+2. Lancer l’IDE.
+
+### Étape B — Support ESP32 (core Espressif)
+
+1. Menu **Fichier → Préférences**.
+2. Dans **URL de gestionnaire de cartes supplémentaires**, coller :
+
+   ```
+   https://espressif.github.io/arduino-esp32/package_esp32_index.json
+   ```
+
+3. Valider.
+4. Menu **Outils → Type de carte → Gestionnaire de cartes…**
+5. Chercher **esp32** et installer **esp32 by Espressif Systems** (dernière version stable).
+
+### Étape C — Bibliothèque FastLED
+
+1. Menu **Outils → Gérer les bibliothèques…**
+2. Chercher **FastLED** → **Installer**.
+
+### Étape D — Pilote USB (si aucun port COM)
+
+1. Brancher la carte en USB.
+2. Si **Outils → Port** est vide : regarder le chip près de l’USB sur la carte.
+   - **CH340** → installer le [pilote CH340](http://www.wch-ic.com/downloads/CH341SER_EXE.html)
+   - **CP2102** → installer le [pilote Silicon Labs CP210x](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)
+3. Débrancher / rebrancher, puis choisir le port **COMx** dans l’IDE.
+
+---
+
+## 2. Câblage
+
+**Brancher l’antenne U.FL** sur le connecteur du module avant tout test Wi‑Fi (sinon le SoftAP peut échouer ou être très faible).
+
+| Élément | Broche ESP32 | Notes |
+|---------|--------------|--------|
+| MAX4466 **OUT** | **GPIO34** | Entrée analogique ADC1 |
+| MAX4466 **VCC** | **3V3** | Ne pas alimenter le micro en 5 V |
+| MAX4466 **GND** | **GND** | GND commun |
+| WS2812 **DIN** | **GPIO4** | Résistance **470 Ω** en série sur DIN |
+| WS2812 **5 V** | Alim **5 V externe** | Pas l’USB seul pour un long ruban |
+| WS2812 **GND** | **GND** | GND commun carte + alim ruban |
+| Antenne | Connecteur **U.FL** | Obligatoire dès que le Wi‑Fi tourne |
+
+Schéma rapide :
+
+```
+MAX4466 OUT ────── GPIO34
+MAX4466 VCC ────── 3V3
+MAX4466 GND ────── GND
+
+WS2812 DIN ──[470 Ω]── GPIO4
+WS2812 5V  ─────────── alim 5 V externe (+)
+WS2812 GND ─────────── GND (commun avec la carte)
+
+Antenne U.FL ──────── connecteur antenne du module
+USB PC ─────────────── port USB de la carte (programmation + 3,3 V logique)
+```
+
+À éviter :
+
+- GPIO **6 à 11** (flash interne de l’ESP32)
+- Tirer fort GPIO **0 / 2 / 12 / 15** au démarrage (broches de boot)
+
+---
+
+## 3. Téléverser (injecter le firmware)
+
+1. Brancher l’USB, antenne U.FL en place.
+2. Dans Arduino IDE : **Fichier → Ouvrir…** → ouvrir le dossier **`Main`** (fichier `Main.ino`).
+3. Menu **Outils → Carte → ESP32 Arduino → ESP32 Dev Module**.
+4. Réglages recommandés (**Outils**) :
 
    | Option | Valeur recommandée |
    |--------|-------------------|
-   | Flash Size | **4MB (FS:2MB OTA:~1019KB)** |
-   | CPU Frequency | 80 MHz |
-   | Upload Speed | 921600 (ou **115200** si erreur) |
-   | Erase Flash | **All Flash Contents** (1× après changement de carte) |
-   | Port | COM de votre câble USB |
+   | Board | **ESP32 Dev Module** |
+   | Flash Size | **4MB (32Mb)** |
+   | Partition Scheme | **Default 4MB with spiffs** |
+   | CPU Frequency | **240 MHz** |
+   | Upload Speed | **921600** (ou **115200** si erreur) |
+   | Port | **COMx** de votre câble USB |
 
-5. Ajuster `Config.h` (nombre de LED, seuils, luminosité).
-6. Téléverser **`Main.ino`** (moniteur série **fermé** pendant l’upload).
-7. (Optionnel) Moniteur série **115200** baud si `DEBUG_SERIAL` est actif.
-8. **Téléphone** — si `WIFI_ENABLE` est à `1` dans `Config.h` :
-   - Se connecter au Wi-Fi **`Cantaluz`** (mot de passe : `cantaluz1`).
-   - L’**app** s’ouvre via le portail captif, ou ouvrir **Chrome** sur `http://cantaluz.local` / `192.168.4.1`.
-   - Slogan : *« Outil d’accompagnement au calme. »*
-   - **Dashboard** : graphique d’ambiance (30 s), barre VU, choix du mode **Flash**, **Standard**, **Méditation guidée** ou **Défi Fifou**.
-   - **Méditation guidée** : choisir **2 / 5 / 10 min**, bouton **Démarrer** → compte à rebours 5 s puis chrono ; phases **cyan** (inspire) → **ambre** (retiens) → **magenta** (expire) → **lavande** (air bloqué) ; LED une par une ; micro ignoré.
-   - **Défi Fifou** : choisir **2 / 5 / 10 min**, **Démarrer** → compte à rebours 5 s (clignotement accéléré) puis chrono ; **20 LED cyan** au départ ; **calme** = gain · **animé** = statu quo · **intense** = perte ; victoire = feu d’artifice (~10 s) · défaite = clignotement rouge.
-   - **Réglages** : sensibilité, zone calme, zone animée, luminosité, montée de la barre ; bouton **↺** = valeur par défaut (`Config.h`) ; **i** = bulle d’aide. *Grisé en Méditation et Défi Fifou.*
-   - Les réglages web partent après **Enregistrer** dans l’onglet Réglages ; au **redémarrage** de la carte, c’est `Config.h` qui reprend la main.
-   - **Ne pas** laisser le moniteur série ouvert en usage normal (sature l’ESP8266).
+5. Ajuster si besoin `Main/Config.h` (nombre de LED, seuils, luminosité).
+6. Fermer le moniteur série s’il est ouvert, puis cliquer **Téléverser** (flèche →).
+7. Si le message **Failed to connect** apparaît :
+   - Maintenir le bouton **BOOT** (parfois nommé **IO0**)
+   - Relancer **Téléverser**
+   - Relâcher **BOOT** dès que l’IDE affiche l’écriture en flash
+8. (Optionnel) Moniteur série **115200** baud si `DEBUG_SERIAL` est actif dans `Config.h`.
 
-### Test Wi-Fi matériel (si aucun réseau visible)
+### Vérifier que ça marche
 
-1. Ouvrir le dossier **`WifiMinimal`** dans l’IDE Arduino (pas `Main`).
-2. Carte : **LOLIN(WEMOS) D1 R1** (la vôtre).
-3. **Outils → Effacer la flash : All Flash Contents** (une fois), puis téléverser.
-4. Chercher le réseau **`Cantaluz_TEST`** (mot de passe `12345678`).
-5. Si **Cantaluz_TEST** n’apparaît pas → problème carte / alim / pilote CH340 / mauvaise carte sélectionnée (pas ESP32).
-6. Si **Cantaluz_TEST** apparaît mais pas **Cantaluz** → retéléverser `Main` ; mettre `LED_COUNT` à **17** pour tester (ruban 5 m = beaucoup de RAM).
+1. Sur le téléphone : se connecter au Wi‑Fi **`Cantaluz`** (mot de passe : `cantaluz1`).
+2. Ouvrir Chrome sur `http://cantaluz.local` ou `http://192.168.4.1`.
+3. L’app affiche le dashboard (VU, modes Flash / Standard / Méditation / Défi Fifou) et les réglages.
 
-### Wi-Fi invisible sur le téléphone ?
+Si le réseau n’apparaît pas :
 
-1. **Carte dans l’IDE** : **LOLIN(WEMOS) D1 R2 & mini** (ESP8266, pas ESP32).
-2. **Moniteur série 115200** après téléversement : doit afficher `SoftAP: OK` et `IP: http://192.168.4.1`. Si `ECHEC`, vérifier `WIFI_AP_PASS` (8 caractères minimum) ou laisser vide pour un réseau ouvert.
-3. **Android / iPhone** : désactiver *« Passer automatiquement aux données mobiles »* / *« Réseau sans Internet »* — le téléphone cache souvent les AP sans Internet ([voir aussi Random Nerd Tutorials](https://randomnerdtutorials.com/esp8266-nodemcu-access-point-ap-web-server/)).
-4. Tester la liste Wi-Fi sur un **PC portable** : le réseau `Cantaluz` y apparaît souvent avant le téléphone.
-5. Changer **`WIFI_AP_CHANNEL`** dans `Config.h` (essayer `1` ou `11`).
-6. Alimentation **USB correcte** (câble données, pas seulement charge) — le Wi-Fi consomme plus au démarrage.
+1. Vérifier que l’**antenne U.FL** est bien enclenchée.
+2. Carte IDE = **ESP32 Dev Module** (pas une variante ESP8266).
+3. Moniteur série 115200 : chercher `SoftAP: OK` et `IP: http://192.168.4.1`.
+4. Sur Android / iPhone : désactiver *« Passer automatiquement aux données mobiles »* / avertissement *« Réseau sans Internet »*.
+5. Tester aussi depuis un PC portable.
+6. Essayer un autre canal `WIFI_AP_CHANNEL` dans `Config.h` (`1` ou `11`).
+7. Utiliser un câble USB **données** (pas charge seule) et une alim correcte.
 
-Référence officielle ESP8266 : [exemple SoftAP](https://github.com/esp8266/Arduino/blob/master/libraries/ESP8266WiFi/examples/WiFiAccessPoint/WiFiAccessPoint.ino).
+---
+
+## App téléphone (rappel)
+
+Si `WIFI_ENABLE` est à `1` dans `Config.h` :
+
+- Slogan : *« Outil d’accompagnement au calme. »*
+- **Dashboard** : graphique d’ambiance (30 s), barre VU, modes **Flash**, **Standard**, **Méditation guidée**, **Défi Fifou**.
+- **Méditation guidée** : **1 / 2 / 5 min**, compte à rebours 5 s ; rythme CP (~6 ans).
+- **Défi Fifou** : jeu du calme ; 20 LED cyan ; victoire = feu d’artifice · défaite = clignotement rouge.
+- **Réglages** : sensibilité, zones, luminosité, montée ; **↺** = défauts `Config.h`.
+- Au **redémarrage** de la carte, `Config.h` reprend la main.
 
 ---
 
@@ -114,23 +193,20 @@ Tous les paramètres utilisateur sont dans **`Main/Config.h`**, documentés ains
 ```
 Cantaluz/
 └── Main/                     ← dossier sketch Arduino (nom = Main.ino)
-    ├── Main.ino              ← point d'entrée (setup / loop)
-    ├── Config.h              ← réglages par défaut (boot)
+    ├── Main.ino              ← point d'entrée ESP32 (setup / loop)
+    ├── Config.h              ← réglages par défaut (boot) + broches GPIO
     ├── AppState.*            ← état global + LiveConfig (web)
     ├── Modes.*               ← dispatch Flash / Standard / Méditation / Défi Fifou
     ├── ModeImmediat.*        ← mode Flash (VU + flash bleu)
     ├── ModeLent.*            ← mode Standard (VU adouci)
     ├── ModeMeditation.*      ← mode Méditation guidée (respiration)
     ├── ModeDefiFifou.*       ← mode Défi Fifou (jeu du calme)
-    ├── MicSensor.*           ← micro + barre VU
-    ├── LedStrip.*            ← ruban WS2812B
+    ├── MicSensor.*           ← micro GPIO34 + barre VU
+    ├── LedStrip.*            ← ruban WS2812B sur GPIO4
     ├── FlashEtat.*           ← flashs bleus (mode Flash)
-    ├── WifiPortal.*          ← SoftAP, API, portail captif
+    ├── WifiPortal.*          ← SoftAP ESP32, API, portail captif
     ├── WebAppHtml.h          ← interface mobile (Dashboard / Réglages)
     └── …
-WifiMinimal/                  ← test Wi-Fi matériel seul (Cantaluz_TEST)
-site/                         ← site wiki technique (Next.js)
-landing/                      ← site marketing (Next.js)
 ```
 
 ---
@@ -150,13 +226,13 @@ Commun aux modes Flash et Standard :
 2. **Barre VU** — hauteur selon le volume ; descente après quelques secondes sous la moyenne.
 3. **Couleurs sur le ruban** — réparties selon les plages ADC (`ADC_FIN_ZONE_VERT`, `ADC_FIN_ZONE_ORANGE`).
 
-Le mode au **démarrage** est `MODE_ACTIF` dans `Config.h` ; l’app web peut le changer à chaud via `Modes.cpp`. D’autres comportements pourront être ajoutés de la même façon.
+Le mode au **démarrage** est `MODE_ACTIF` dans `Config.h` ; l’app web peut le changer à chaud via `Modes.cpp`.
 
 ---
 
 ## Règles de participation
 
-Ce dépôt est un projet **collectif d’école**. Pour garder l’historique liside et les revues simples, chaque contribution suit le modèle **une branche → une pull request**.
+Ce dépôt est un projet **collectif d’école**. Pour garder l’historique lisible et les revues simples, chaque contribution suit le modèle **une branche → une pull request**.
 
 ### Principe : une branche, une PR, un sujet
 
@@ -189,7 +265,7 @@ Ouvrir ensuite **une** pull request : `feat/mon-sujet-clair` → `main`.
 ### Contenu attendu dans une PR
 
 - **Titre** clair (ex. « Ajout du mode lent pour la descente de barre »).
-- **Description** : objectif, tests réalisés sur le matériel (WeMos + ruban + micro).
+- **Description** : objectif, tests réalisés sur le matériel (ESP32 + ruban + micro).
 - **Périmètre limité** : si la PR dépasse ~300 lignes ou touche plusieurs modules sans lien, la scinder.
 - **Revue** : au moins un pair de l’équipe valide avant fusion.
 

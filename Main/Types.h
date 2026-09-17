@@ -75,7 +75,7 @@ enum BruitLedMode : uint8_t {
  * Le plus important pour le VU et les flashs : champ « peak ».
  */
 struct MicSample {
-  int raw;     // Dernière lecture brute A0 (0-1023), peu utilisée
+  int raw;     // Dernière lecture brute ADC (0-1023), peu utilisée
   int minVal;  // Minimum sur les SAMPLE_COUNT lectures de la fenêtre
   int maxVal;  // Maximum sur la fenêtre
   int avg;     // Moyenne sur la fenêtre (sert au lissage descente barre)

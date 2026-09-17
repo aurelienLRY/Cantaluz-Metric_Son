@@ -1,5 +1,5 @@
 /*
- * WifiPortal.cpp — SoftAP ESP8266 + interface mobile Cantaluz
+ * WifiPortal.cpp — SoftAP ESP32 + interface mobile Cantaluz
  */
 
 #include "WifiPortal.h"
@@ -7,9 +7,9 @@
 
 #if WIFI_ENABLE
 
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
 #include <DNSServer.h>
 
 #include "AppState.h"
@@ -20,7 +20,15 @@
 #include "MicSensor.h"
 #include "WebAppHtml.h"
 
-static ESP8266WebServer server(WIFI_HTTP_PORT);
+#ifdef DEBUG_SERIAL
+#define WIFI_SERIAL_PRINT(x)    Serial.print(x)
+#define WIFI_SERIAL_PRINTLN(x)  Serial.println(x)
+#else
+#define WIFI_SERIAL_PRINT(x)    ((void)0)
+#define WIFI_SERIAL_PRINTLN(x)  ((void)0)
+#endif
+
+static WebServer server(WIFI_HTTP_PORT);
 static DNSServer dnsServer;
 static const byte WIFI_DNS_PORT = 53;
 static bool s_mdnsRunning = false;
@@ -32,29 +40,36 @@ static unsigned long s_lastHeartbeatMs = 0;
 static unsigned long s_lastLedToggleMs = 0;
 static bool s_ledApState = false;
 
-// LED bleue WeMos (GPIO2) : allumée = Wi-Fi AP actif (pas de LED Wi-Fi dédiée sur D1 R1)
+// LED embarquée DevKit (souvent absente de LED_BUILTIN selon la variante IDE)
+static const int WIFI_STATUS_LED_PIN = 2;
+
+// LED embarquée : allumée = SoftAP actif
 static void wifiLedApOk(bool on) {
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, on ? LOW : HIGH);
+  pinMode(WIFI_STATUS_LED_PIN, OUTPUT);
+  digitalWrite(WIFI_STATUS_LED_PIN, on ? HIGH : LOW);
   s_ledApState = on;
 }
 
 static void wifiPrintIp(const IPAddress &ip) {
-  Serial.print(ip[0]);
-  Serial.print('.');
-  Serial.print(ip[1]);
-  Serial.print('.');
-  Serial.print(ip[2]);
-  Serial.print('.');
-  Serial.println(ip[3]);
+  WIFI_SERIAL_PRINT(ip[0]);
+  WIFI_SERIAL_PRINT('.');
+  WIFI_SERIAL_PRINT(ip[1]);
+  WIFI_SERIAL_PRINT('.');
+  WIFI_SERIAL_PRINT(ip[2]);
+  WIFI_SERIAL_PRINT('.');
+  WIFI_SERIAL_PRINTLN(ip[3]);
 }
 
 static void wifiLogHeap(const __FlashStringHelper *label) {
+#ifdef DEBUG_SERIAL
   Serial.print(label);
   Serial.print(F(" heap="));
   Serial.print(ESP.getFreeHeap());
-  Serial.print(F(" bloc="));
-  Serial.println(ESP.getMaxFreeBlockSize());
+  Serial.print(F(" maxAlloc="));
+  Serial.println(ESP.getMaxAllocHeap());
+#else
+  (void)label;
+#endif
 }
 
 static void wifiApplyToHardware() {
@@ -210,7 +225,7 @@ static void wifiPortalStartDnsMdns() {
     s_dnsRunning = true;
   } else {
     s_dnsRunning = false;
-    Serial.println(F("DNS portail: ECHEC"));
+    WIFI_SERIAL_PRINTLN(F("DNS portail: ECHEC"));
   }
 #else
   s_dnsRunning = false;
@@ -221,11 +236,11 @@ static void wifiPortalStartDnsMdns() {
   if (MDNS.begin(WIFI_MDNS_NAME)) {
     MDNS.addService("http", "tcp", WIFI_HTTP_PORT);
     s_mdnsRunning = true;
-    Serial.print(F("Adresse locale: http://"));
-    Serial.print(WIFI_MDNS_NAME);
-    Serial.println(F(".local"));
+    WIFI_SERIAL_PRINT(F("Adresse locale: http://"));
+    WIFI_SERIAL_PRINT(WIFI_MDNS_NAME);
+    WIFI_SERIAL_PRINTLN(F(".local"));
   } else {
-    Serial.println(F("mDNS: ECHEC (utiliser http://192.168.4.1)"));
+    WIFI_SERIAL_PRINTLN(F("mDNS: ECHEC (utiliser http://192.168.4.1)"));
   }
 }
 
@@ -234,12 +249,12 @@ static void handleMeditationStart() {
     server.send(400, F("application/json"), F("{\"ok\":false,\"err\":\"mode\"}"));
     return;
   }
-  uint16_t dur = MEDIT_DUR_5MIN_SEC;
+  uint16_t dur = MEDIT_DUR_2MIN_SEC;
   if (server.hasArg("dur")) {
     dur = (uint16_t)server.arg("dur").toInt();
   }
-  if (dur != MEDIT_DUR_2MIN_SEC && dur != MEDIT_DUR_5MIN_SEC && dur != MEDIT_DUR_10MIN_SEC) {
-    dur = MEDIT_DUR_5MIN_SEC;
+  if (dur != MEDIT_DUR_1MIN_SEC && dur != MEDIT_DUR_2MIN_SEC && dur != MEDIT_DUR_5MIN_SEC) {
+    dur = MEDIT_DUR_2MIN_SEC;
   }
   meditationStart(dur);
   char buf[128];
@@ -259,12 +274,12 @@ static void handleFifouStart() {
     server.send(400, F("application/json"), F("{\"ok\":false,\"err\":\"mode\"}"));
     return;
   }
-  uint16_t dur = MEDIT_DUR_5MIN_SEC;
+  uint16_t dur = FIFOU_DUR_2MIN_SEC;
   if (server.hasArg("dur")) {
     dur = (uint16_t)server.arg("dur").toInt();
   }
-  if (dur != MEDIT_DUR_2MIN_SEC && dur != MEDIT_DUR_5MIN_SEC && dur != MEDIT_DUR_10MIN_SEC) {
-    dur = MEDIT_DUR_5MIN_SEC;
+  if (dur != FIFOU_DUR_1MIN_SEC && dur != FIFOU_DUR_2MIN_SEC && dur != FIFOU_DUR_5MIN_SEC) {
+    dur = FIFOU_DUR_2MIN_SEC;
   }
   defiFifouStart(dur);
   char buf[128];
@@ -349,16 +364,12 @@ static void handleSettings() {
 
 static bool wifiStartSoftApOnce() {
   WiFi.persistent(false);
-  WiFi.disconnect(true);
-  WiFi.softAPdisconnect(true);
+  WiFi.disconnect(true, true);
   delay(100);
 
-  WiFi.forceSleepWake();
   WiFi.mode(WIFI_AP);
-  WiFi.enableSTA(false);
-  WiFi.setSleepMode(WIFI_NONE_SLEEP);
-  WiFi.setOutputPower(20.5f);
-  WiFi.setPhyMode(WIFI_PHY_MODE_11G);
+  WiFi.setSleep(false);
+  WiFi.setTxPower(WIFI_POWER_19_5dBm);
 
   const IPAddress apIp(192, 168, 4, 1);
   const IPAddress apGw(192, 168, 4, 1);
@@ -373,10 +384,10 @@ static bool wifiStartSoftApOnce() {
   if (strlen(WIFI_AP_PASS) >= 8) {
     ok = WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASS, ch, 0, 4);
   } else {
-    ok = WiFi.softAP(WIFI_AP_SSID, "", ch, 0, 4);
+    ok = WiFi.softAP(WIFI_AP_SSID, NULL, ch, 0, 4);
   }
 
-  delay(800);
+  delay(500);
   return ok && WiFi.softAPIP()[0] != 0;
 }
 
@@ -386,62 +397,62 @@ bool wifiPortalStartRadio() {
   for (int attempt = 1; attempt <= 3; attempt++) {
     ok = wifiStartSoftApOnce();
     if (ok) break;
-    Serial.print(F("  tentative SoftAP "));
-    Serial.print(attempt);
-    Serial.println(F(" echouee, nouvel essai..."));
+    WIFI_SERIAL_PRINT(F("  tentative SoftAP "));
+    WIFI_SERIAL_PRINT(attempt);
+    WIFI_SERIAL_PRINTLN(F(" echouee, nouvel essai..."));
     delay(500);
   }
   s_apRunning = ok;
   wifiLogHeap(F("Apres WiFi"));
   wifiLedApOk(ok);
 
-  Serial.println();
-  Serial.println(F("=== WiFi Cantaluz ==="));
-  Serial.print(F("SoftAP: "));
-  Serial.println(ok ? F("OK") : F("ECHEC"));
-  Serial.print(F("SSID: "));
-  Serial.println(WIFI_AP_SSID);
-  Serial.print(F("Mot de passe: "));
+  WIFI_SERIAL_PRINTLN();
+  WIFI_SERIAL_PRINTLN(F("=== WiFi Cantaluz ==="));
+  WIFI_SERIAL_PRINT(F("SoftAP: "));
+  WIFI_SERIAL_PRINTLN(ok ? F("OK") : F("ECHEC"));
+  WIFI_SERIAL_PRINT(F("SSID: "));
+  WIFI_SERIAL_PRINTLN(WIFI_AP_SSID);
+  WIFI_SERIAL_PRINT(F("Mot de passe: "));
   if (strlen(WIFI_AP_PASS) >= 8) {
-    Serial.println(WIFI_AP_PASS);
+    WIFI_SERIAL_PRINTLN(WIFI_AP_PASS);
   } else {
-    Serial.println(F("(reseau ouvert)"));
+    WIFI_SERIAL_PRINTLN(F("(reseau ouvert)"));
   }
-  Serial.print(F("Canal: "));
-  Serial.println(WIFI_AP_CHANNEL);
-  Serial.print(F("IP: http://"));
+  WIFI_SERIAL_PRINT(F("Canal: "));
+  WIFI_SERIAL_PRINTLN(WIFI_AP_CHANNEL);
+  WIFI_SERIAL_PRINT(F("IP: http://"));
   wifiPrintIp(WiFi.softAPIP());
-  Serial.print(F("Nom: http://"));
-  Serial.print(WIFI_MDNS_NAME);
-  Serial.println(F(".local"));
+  WIFI_SERIAL_PRINT(F("Nom: http://"));
+  WIFI_SERIAL_PRINT(WIFI_MDNS_NAME);
+  WIFI_SERIAL_PRINTLN(F(".local"));
 #if WIFI_CAPTIVE_PORTAL
-  Serial.println(F("Portail captif: actif (page auto a la connexion)"));
+  WIFI_SERIAL_PRINTLN(F("Portail captif: actif (page auto a la connexion)"));
 #endif
-  Serial.print(F("MAC AP: "));
-  Serial.println(WiFi.softAPmacAddress());
+  WIFI_SERIAL_PRINT(F("MAC AP: "));
+  WIFI_SERIAL_PRINTLN(WiFi.softAPmacAddress());
 
-  if (ESP.getFreeHeap() < 20000) {
-    Serial.println(F("ATTENTION: peu de RAM — mettre LED_COUNT a 17 pour tester."));
+  if (ESP.getFreeHeap() < 40000) {
+    WIFI_SERIAL_PRINTLN(F("ATTENTION: peu de RAM — mettre LED_COUNT a 17 pour tester."));
   }
   if (!ok) {
-    Serial.println(F(">>> Essayez le sketch WifiMinimal (dossier WifiMinimal/)"));
+    WIFI_SERIAL_PRINTLN(F(">>> SoftAP echec — verifier antenne U.FL et alim USB"));
     for (int i = 0; i < 6; i++) {
-      digitalWrite(LED_BUILTIN, LOW);
+      digitalWrite(WIFI_STATUS_LED_PIN, HIGH);
       delay(150);
-      digitalWrite(LED_BUILTIN, HIGH);
+      digitalWrite(WIFI_STATUS_LED_PIN, LOW);
       delay(150);
       yield();
     }
   } else {
-    Serial.println(F("LED carte = allumee si Wi-Fi AP actif (GPIO2)"));
+    WIFI_SERIAL_PRINTLN(F("LED carte = allumee si Wi-Fi AP actif (GPIO2)"));
   }
-  Serial.println();
+  WIFI_SERIAL_PRINTLN();
   return ok;
 }
 
 void wifiPortalStartWeb() {
   if (!s_apRunning) {
-    Serial.println(F("Serveur web: ignore (SoftAP inactif)"));
+    WIFI_SERIAL_PRINTLN(F("Serveur web: ignore (SoftAP inactif)"));
     return;
   }
   server.on("/", handleApp);
@@ -472,7 +483,7 @@ void wifiPortalSetup() {
 }
 
 void wifiPortalLoop() {
-  WiFi.setSleepMode(WIFI_NONE_SLEEP);
+  WiFi.setSleep(false);
 
 #if WIFI_CAPTIVE_PORTAL
   if (s_dnsRunning) {
@@ -481,9 +492,6 @@ void wifiPortalLoop() {
     }
   }
 #endif
-  if (s_mdnsRunning) {
-    MDNS.update();
-  }
 
   if (s_webRunning) {
     for (uint8_t i = 0; i < 12; i++) {
@@ -496,9 +504,9 @@ void wifiPortalLoop() {
   if (now - s_lastApCheckMs > 2000UL) {
     s_lastApCheckMs = now;
     IPAddress ip = WiFi.softAPIP();
-    bool alive = (ip[0] != 0) && (WiFi.getMode() == WIFI_AP);
+    bool alive = (ip[0] != 0) && (WiFi.getMode() == WIFI_AP || WiFi.getMode() == WIFI_AP_STA);
     if (!alive && s_apRunning) {
-      Serial.println(F("WiFi: AP perdu en boucle — redemarrage"));
+      WIFI_SERIAL_PRINTLN(F("WiFi: AP perdu en boucle — redemarrage"));
       s_apRunning = wifiStartSoftApOnce();
       wifiLedApOk(s_apRunning);
       if (s_apRunning && s_webRunning) {
@@ -510,18 +518,18 @@ void wifiPortalLoop() {
   if (s_apRunning && now - s_lastHeartbeatMs > 10000UL) {
     s_lastHeartbeatMs = now;
     IPAddress ip = WiFi.softAPIP();
-    Serial.print(F("[WiFi OK] "));
-    Serial.print(WIFI_AP_SSID);
-    Serial.print(F(" IP="));
+    WIFI_SERIAL_PRINT(F("[WiFi OK] "));
+    WIFI_SERIAL_PRINT(WIFI_AP_SSID);
+    WIFI_SERIAL_PRINT(F(" IP="));
     wifiPrintIp(ip);
-    Serial.print(F(" stations="));
-    Serial.println(WiFi.softAPgetStationNum());
+    WIFI_SERIAL_PRINT(F(" stations="));
+    WIFI_SERIAL_PRINTLN(WiFi.softAPgetStationNum());
   } else if (!s_apRunning && now - s_lastHeartbeatMs > 2000UL) {
     s_lastHeartbeatMs = now;
-    Serial.println(F("[WiFi ECHEC] AP inactif — recherche reseau impossible"));
+    WIFI_SERIAL_PRINTLN(F("[WiFi ECHEC] AP inactif — recherche reseau impossible"));
     if (now - s_lastLedToggleMs > 300UL) {
       s_lastLedToggleMs = now;
-      digitalWrite(LED_BUILTIN, s_ledApState ? HIGH : LOW);
+      digitalWrite(WIFI_STATUS_LED_PIN, s_ledApState ? LOW : HIGH);
       s_ledApState = !s_ledApState;
     }
   }

@@ -1,4 +1,4 @@
-# Guide des fichiers — Cantaluz (dossier Main)
+# Guide des fichiers — Cantaluz (ESP32-WROOM-32U, dossier Main)
 
 ## Par où commencer ?
 
@@ -35,7 +35,7 @@
 | **LedStrip.h / .cpp** | Ruban, zones couleur, boot visuel | BANDEAU, PLAGES ADC, BOOT |
 | **FlashEtat.h / .cpp** | Flashs bleus, paliers montée/descente | FLASH BLEU, PLAGES ADC |
 | **DebugLog.h / .cpp** | Moniteur série 115200 | DEBUG SÉRIE |
-| **WifiPortal.h / .cpp** | SoftAP, mDNS, portail captif, API `/api/*` | WIFI dans Config.h |
+| **WifiPortal.h / .cpp** | SoftAP ESP32, mDNS, portail captif, API `/api/*` | WIFI dans Config.h |
 | **WebAppHtml.h** | App mobile : Dashboard (graphique, VU, Flash/Standard) + Réglages | Textes UI uniquement |
 
 ### Modes
