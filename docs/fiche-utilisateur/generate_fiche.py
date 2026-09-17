@@ -346,14 +346,14 @@ def build():
             "Méditation guidée — respiration par la lumière",
             "Le micro est désactivé. Cyan = inspire · Ambre = retiens · Magenta = expire · "
             "Lavande = bloque l'air. LED une par une sur le ruban.",
-            "Nécessite l'application : Méditation guidée → durée 2, 5 ou 10 min → Démarrer "
+            "Nécessite l'application : Méditation guidée → durée 1, 2 ou 5 min → Démarrer "
             "(compte à rebours 5 s, puis chrono). Bouton Arrêter pour interrompre.",
         ),
         (
             "Défi Fifou — jeu du calme",
             "20 LED cyan au départ. Calme = les LED avancent · Animé = statu quo · "
             "Intense = recul. Victoire = feu d'artifice · Défaite = clignotement rouge.",
-            "Nécessite l'application : Défi Fifou → durée 2, 5 ou 10 min → Démarrer. "
+            "Nécessite l'application : Défi Fifou → durée 1, 2 ou 5 min → Démarrer. "
             "Astuce : en 2 min, viser environ 1 min 20 de calme continu.",
         ),
     ]

@@ -97,9 +97,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 </div>
 <p class="bub bub-med" id="tip-med"></p>
 <div class="dur-row" id="dur-row">
+<button type="button" class="dur" data-dur="60">1 min</button>
 <button type="button" class="dur on" data-dur="120">2 min</button>
 <button type="button" class="dur" data-dur="300">5 min</button>
-<button type="button" class="dur" data-dur="600">10 min</button>
 </div>
 <button type="button" class="btn-save" id="med-start">Démarrer</button>
 <button type="button" class="btn-stop hide" id="med-stop">Arrêter</button>
@@ -118,9 +118,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 </div>
 <p class="bub bub-med" id="tip-fifou"></p>
 <div class="dur-row" id="fifou-dur-row">
+<button type="button" class="dur" data-fifou-dur="60">1 min</button>
 <button type="button" class="dur on" data-fifou-dur="120">2 min</button>
 <button type="button" class="dur" data-fifou-dur="300">5 min</button>
-<button type="button" class="dur" data-fifou-dur="600">10 min</button>
 </div>
 <button type="button" class="btn-save" id="fifou-start">Démarrer</button>
 <button type="button" class="btn-stop hide" id="fifou-stop">Arrêter</button>
@@ -175,8 +175,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 var mode=0,hist=[],G,edit=0,dashOn=1,medDur=120,fifouDur=120;
 var PH={idle:'Prêt',countdown:'Préparez-vous',inspire:'Inspire',hold:'Retiens',expire:'Expire',holdempty:'Bloque l\'air',pause:'',done:'Terminé'};
 var FPH={idle:'Prêt',countdown:'Préparez-vous',playing:'En jeu',won:'Victoire !',lost:'Temps écoulé',done:'Terminé'};
-var MEDP={120:{lb:'2 minutes',in:4,ho:2,ex:5,em:2,pa:1},300:{lb:'5 minutes',in:5,ho:3,ex:6,em:2,pa:1},600:{lb:'10 minutes',in:6,ho:4,ex:7,em:3,pa:2}};
-var FIFP={120:{lb:'2 minutes',calm:'1 min 20'},300:{lb:'5 minutes',calm:'3 min 20'},600:{lb:'10 minutes',calm:'6 min 40'}};
+var MEDP={60:{lb:'1 minute',in:3,ho:1,ex:3,em:1,pa:1},120:{lb:'2 minutes',in:3,ho:2,ex:4,em:1,pa:1},300:{lb:'5 minutes',in:3,ho:2,ex:4,em:1,pa:1}};
+var FIFP={60:{lb:'1 minute',calm:'40 s'},120:{lb:'2 minutes',calm:'1 min 20'},300:{lb:'5 minutes',calm:'3 min 20'}};
 function qs(id){return document.getElementById(id)}
 function medReps(d){var p=MEDP[d]||MEDP[120];return Math.floor((d||120)/(p.in+p.ho+p.ex+p.em+p.pa))}
 function updateMedTip(){var p=MEDP[medDur]||MEDP[120],n=medReps(medDur),cy=p.in+p.ho+p.ex+p.em+p.pa;qs('tip-med').innerHTML='<strong>Séance '+p.lb+'</strong> — environ <strong>'+n+' respirations</strong> (cycle '+cy+' s).<br>Chaque respiration : <span class="clr clr-in"></span>Inspire '+p.in+' s → <span class="clr clr-ho"></span>Retiens '+p.ho+' s → <span class="clr clr-ex"></span>Expire '+p.ex+' s → <span class="clr clr-em"></span>Bloque l\'air '+p.em+' s, puis pause '+p.pa+' s.<br>Les LED s\'allument <strong>une par une</strong>, toujours dans le même sens sur tout le ruban.'}

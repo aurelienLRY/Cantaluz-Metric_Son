@@ -69,7 +69,7 @@ void flashHandleStateMachine(int peak) {
   int peakEff = micPeakEffectifPourFlash(peak);
 
   ColorState zonePlage = ledZoneDepuisPeak(peakEff);
-  ColorState zoneDescente = ledStateWithHysteresis(peak, g.currentState);
+  ColorState zoneDescente = ledStateWithHysteresis(peakEff, g.currentState);
   ColorState cibleFlash = flashProchainEtatMontee(zonePlage);
 
   if (zoneDescente < g.currentState) {

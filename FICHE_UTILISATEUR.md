@@ -91,7 +91,8 @@ Choisir un mode dans l'app (onglet **Dashboard** → carte **Mode**). Le changem
   - **Magenta** = expire  
   - **Lavande** = bloque l'air (fin de cycle)  
 - Les LED s'allument **une par une**, toujours dans le **même sens** sur le ruban.
-- Durée au choix : **2 min**, **5 min** ou **10 min**, puis bouton **Démarrer** (compte à rebours 5 s, puis chrono).
+- Durée au choix : **1 min**, **2 min** ou **5 min**, puis bouton **Démarrer** (compte à rebours 5 s, puis chrono).
+- Rythme de respiration **adapté aux enfants (~6 ans)** : inspire **3 s**, retiens **1 à 2 s**, expire **3 à 4 s**, bloque l'air **1 s** (cycles courts, ~9 à 11 s).
 
 **Cas d'usage**
 
@@ -106,7 +107,7 @@ Choisir un mode dans l'app (onglet **Dashboard** → carte **Mode**). Le changem
 **Comportement**
 
 - **Jeu du calme** : l'inverse des modes Flash et Standard.
-- L'opérateur choisit une durée (**2 min**, **5 min** ou **10 min**) puis lance le défi.
+- L'opérateur choisit une durée (**1 min**, **2 min** ou **5 min**) puis lance le défi.
 - Compte à rebours **5 s** : le bandeau **clignote de plus en plus vite**, puis le chrono démarre.
 - **Départ** : **20 LED** en **cyan** (uniforme sur tout le bandeau pendant le jeu).
 - Selon le niveau sonore :
@@ -122,7 +123,7 @@ Choisir un mode dans l'app (onglet **Dashboard** → carte **Mode**). Le changem
 - Défi collectif : « Remplissez le ruban avant la fin ! »
 - Alternative ludique à la méditation pour des classes qui aiment la compétition douce.
 
-> **Astuce** : pour gagner en 2 min, il faut environ **1 min 20 de calme** (une marge d'erreur est prévue — l'orange ne fait pas gagner, le rouge fait reculer).
+> **Astuce** : pour gagner en 1 min, il faut environ **40 s de calme** ; en 2 min, **1 min 20** (marge d'erreur incluse — l'orange ne fait pas gagner, le rouge fait reculer).
 
 ---
 
@@ -159,7 +160,7 @@ Vous devez utiliser un **smartphone** (ou tablette) connecté au Wi-Fi de Cantal
 
 | Onglet | Contenu |
 |--------|---------|
-| **Dashboard** | Graphique d'ambiance (30 s), barre de niveau, **choix du mode** (Flash / Standard / Méditation guidée / Défi Fifou). En Méditation ou Défi Fifou : durée 2 / 5 / 10 min, **Démarrer** / **Arrêter**. |
+| **Dashboard** | Graphique d'ambiance (30 s), barre de niveau, **choix du mode** (Flash / Standard / Méditation guidée / Défi Fifou). Méditation et Défi Fifou : **1 / 2 / 5 min** — **Démarrer** / **Arrêter**. |
 | **Réglages** | Curseurs + bouton **i** (aide) et **↺** (valeur d'origine). *Grisé en mode Méditation et Défi Fifou.* |
 
 | Réglage | À quoi ça sert |
@@ -195,8 +196,8 @@ Les réglages ne partent sur l'appareil qu'après le bouton **Enregistrer**. Ils
 | Page web ne s'ouvre pas | Chrome → `192.168.4.1` ; désactiver « données mobiles automatiques ». |
 | Ruban bouge tout seul | Réglages → baisser **Sensibilité** (essayer 0–10). |
 | Trop de rouge / flashs | Baisser **Sensibilité** ; augmenter **Zone calme** et **Zone animée**. |
-| Méditation ne démarre pas | Choisir d'abord le mode **Méditation guidée**, puis **2 / 5 / 10 min**, puis **Démarrer**. |
-| Défi Fifou ne démarre pas | Choisir d'abord le mode **Défi Fifou**, puis **2 / 5 / 10 min**, puis **Démarrer**. |
+| Méditation ne démarre pas | Choisir d'abord le mode **Méditation guidée**, puis **1 / 2 / 5 min**, puis **Démarrer**. |
+| Défi Fifou ne démarre pas | Choisir d'abord le mode **Défi Fifou**, puis **1 / 2 / 5 min**, puis **Démarrer**. |
 
 ---
 

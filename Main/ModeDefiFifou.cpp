@@ -22,16 +22,16 @@ static const uint8_t FIFOU_FIREWORK_PALETTE_COUNT =
   sizeof(FIFOU_FIREWORK_PALETTE) / sizeof(FIFOU_FIREWORK_PALETTE[0]);
 
 static int fifouProfileIndexFromDur(uint16_t durSec) {
-  if (durSec <= MEDIT_DUR_2MIN_SEC + 30) return 0;
-  if (durSec <= MEDIT_DUR_5MIN_SEC + 30) return 1;
+  if (durSec <= FIFOU_DUR_1MIN_SEC + 15) return 0;
+  if (durSec <= FIFOU_DUR_2MIN_SEC + 15) return 1;
   return 2;
 }
 
 static uint16_t fifouSessionSecFromProfile(uint8_t profile) {
   switch (profile) {
-    case 0: return MEDIT_DUR_2MIN_SEC;
-    case 1: return MEDIT_DUR_5MIN_SEC;
-    default: return MEDIT_DUR_10MIN_SEC;
+    case 0: return FIFOU_DUR_1MIN_SEC;
+    case 1: return FIFOU_DUR_2MIN_SEC;
+    default: return FIFOU_DUR_5MIN_SEC;
   }
 }
 
@@ -198,7 +198,7 @@ bool defiFifouStart(uint16_t durSec) {
 void modeDefiFifouSetup() {
   defiFifouStop();
   g.fifou.durProfile = 0;
-  g.fifou.sessionDurMs = (uint32_t)MEDIT_DUR_2MIN_SEC * 1000UL;
+  g.fifou.sessionDurMs = (uint32_t)FIFOU_DUR_2MIN_SEC * 1000UL;
   ledComputeZonesFromPlages();
   ledInitHardware();
   configApply();

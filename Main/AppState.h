@@ -46,7 +46,7 @@ enum FifouPhase : uint8_t {
 
 // État d'une partie Défi Fifou (API web + ModeDefiFifou.cpp)
 struct DefiFifouState {
-  uint8_t durProfile;           // 0 = 2 min, 1 = 5 min, 2 = 10 min
+  uint8_t durProfile;           // 0 = 1 min, 1 = 2 min, 2 = 5 min
   uint32_t sessionDurMs;
   FifouPhase phase;
   bool countdownActive;
@@ -62,7 +62,7 @@ struct DefiFifouState {
 
 // État d'une séance Méditation guidée (API web + ModeMeditation.cpp)
 struct MeditationState {
-  uint8_t durProfile;           // 0 = 2 min, 1 = 5 min, 2 = 10 min
+  uint8_t durProfile;           // 0 = 1 min, 1 = 2 min, 2 = 5 min
   uint32_t sessionDurMs;        // Durée totale choisie (ms)
   MedPhase phase;
   bool countdownActive;

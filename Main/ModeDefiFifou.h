@@ -4,7 +4,7 @@
  *
  * Les élèves partent avec FIFOU_START_LEDS LED d'une couleur dédiée.
  * Zone calme → gain ; orange → statu quo ; rouge → perte (plus lente).
- * Victoire si le bandeau est rempli avant la fin du temps choisi (2 / 5 / 10 min).
+ * Victoire si le bandeau est rempli avant la fin du temps choisi (1 / 2 / 5 min).
  */
 
 #include <Arduino.h>

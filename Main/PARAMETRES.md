@@ -29,8 +29,8 @@
 | Onglet | Contenu |
 |--------|---------|
 | **Dashboard** | Graphique ambiance 30 s, barre VU, modes Flash / Standard / Méditation / Défi Fifou |
-| **Méditation guidée** | Durée 2 / 5 / 10 min, Démarrer, compte à rebours, chrono, phases |
-| **Défi Fifou** | Durée 2 / 5 / 10 min, Démarrer, compte à rebours, chrono, LED gagnées / objectif |
+| **Méditation guidée** | Durée **1 / 2 / 5 min**, Démarrer, compte à rebours, chrono, phases |
+| **Défi Fifou** | Durée **1 / 2 / 5 min**, Démarrer, compte à rebours, chrono, LED gagnées / objectif |
 | **Réglages** | Zone calme, zone animée, luminosité, montée barre (grisés en méditation et Défi Fifou) |
 
 | Route API | Rôle |
@@ -38,9 +38,9 @@
 | `GET /api/status` | Niveau sonore, barre, mode, état méditation |
 | `GET /api/settings?...&mode=` | Applique config live (`mode` 0 / 1 / 2 / 3) |
 | `GET /api/reset?field=...` | Restaure un paramètre depuis `Config.h` |
-| `GET /api/meditation/start?dur=120\|300\|600` | Compte à rebours puis séance |
+| `GET /api/meditation/start?dur=60\|120\|300` | Compte à rebours puis séance |
 | `GET /api/meditation/stop` | Arrête la séance |
-| `GET /api/fifou/start?dur=120\|300\|600` | Compte à rebours puis défi |
+| `GET /api/fifou/start?dur=60\|120\|300` | Compte à rebours puis défi |
 | `GET /api/fifou/stop` | Arrête le défi |
 
 Réglages live : `activeMode`, seuils vert/orange, luminosité, montée barre, **sensibilité** (`sensitivity` 0–100).
