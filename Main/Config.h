@@ -45,6 +45,11 @@
 #define LED_PIN 4                                    // GPIO4 — DIN du ruban WS2812B
 #define MIN_LEDS_ON 5                                // LED allumées minimum au silence   value: [1 - 50]
 
+// Bandeau rond : une seule couleur = palier en cours (vert/orange/rouge)
+// ou phase en cours (méditation, Défi Fifou). Tout le cercle est uniforme.
+#define RING_LED_COUNT 35  // Nombre de LED du cercle   value: [1 - 300]
+#define RING_PIN 16        // GPIO16 — DIN du bandeau rond
+
 // ═══════════════════════════════════════════════════════════════
 //  MICRO — matériel + sensibilité (app : curseur Sensibilité)
 //  ESP32-WROOM-32U : GPIO34 = ADC1 (entrée seule), alim micro en 3,3 V
@@ -193,7 +198,7 @@
 #define WIFI_ENABLE 1
 #define WIFI_OPEN_NETWORK 0
 #define WIFI_AP_SSID "Cantaluz"
-#define WIFI_AP_PASS "cantaluz1"
+#define WIFI_AP_PASS "cantaluz"
 #define WIFI_AP_CHANNEL 6  // value: [1 - 13]
 #define WIFI_HTTP_PORT 80
 #define WIFI_MDNS_NAME "cantaluz"

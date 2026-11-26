@@ -38,6 +38,9 @@ void ledRenderVuMeter(float level);
 // Permet de remplir tout le ruban d'une couleur (flash bleu, etc.)
 void ledFillStrip(CRGB color);
 
+// Peint le bandeau rond (couleur du palier ou de la phase) puis envoie les deux rubans
+void ledPresent();
+
 // Permet d'afficher le ruban bleu pendant dureeMs puis attendre (boot)
 void ledAfficherBleuComplet(uint16_t dureeMs);
 

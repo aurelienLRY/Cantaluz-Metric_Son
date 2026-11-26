@@ -88,7 +88,8 @@ Tu n’as **pas** besoin d’esptool en ligne de commande. Un seul logiciel suff
 | MAX4466 **OUT** | **GPIO34** | Entrée analogique ADC1 |
 | MAX4466 **VCC** | **3V3** | Ne pas alimenter le micro en 5 V |
 | MAX4466 **GND** | **GND** | GND commun |
-| WS2812 **DIN** | **GPIO4** | Résistance **470 Ω** en série sur DIN |
+| WS2812 **DIN** (barre) | **GPIO4** | Résistance **470 Ω** en série sur DIN |
+| WS2812 **DIN** (cercle) | **GPIO16** | Même alim 5 V / GND ; ~45 LED (`RING_LED_COUNT`) |
 | WS2812 **5 V** | Alim **5 V externe** | Pas l’USB seul pour un long ruban |
 | WS2812 **GND** | **GND** | GND commun carte + alim ruban |
 | Antenne | Connecteur **U.FL** | Obligatoire dès que le Wi‑Fi tourne |
@@ -100,7 +101,8 @@ MAX4466 OUT ────── GPIO34
 MAX4466 VCC ────── 3V3
 MAX4466 GND ────── GND
 
-WS2812 DIN ──[470 Ω]── GPIO4
+WS2812 barre DIN ──[470 Ω]── GPIO4
+WS2812 cercle DIN ─[470 Ω]── GPIO16
 WS2812 5V  ─────────── alim 5 V externe (+)
 WS2812 GND ─────────── GND (commun avec la carte)
 

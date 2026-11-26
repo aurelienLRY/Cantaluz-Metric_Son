@@ -100,6 +100,7 @@ struct RuntimeConfig {
 // État vivant du sketch — une seule instance globale g
 struct AppState {
   CRGB leds[LED_COUNT];          // Couleurs de chaque LED (buffer FastLED)
+  CRGB ring[RING_LED_COUNT];     // Bandeau rond : couleur unique du palier / de la phase
 
   LiveConfig live;               // Réglages temps réel (web + Config.h au démarrage)
   RuntimeConfig run;             // Paramètres convertis (voir ci-dessus)

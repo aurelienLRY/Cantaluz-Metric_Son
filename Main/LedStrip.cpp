@@ -14,6 +14,9 @@ const CRGB COULEUR_VERT   = CRGB(0, 180, 0);
 const CRGB COULEUR_ORANGE = CRGB(255, 140, 0);
 const CRGB COULEUR_ROUGE  = CRGB(255, 0, 0);
 
+// Dernière couleur atteinte par le bout de la barre (Flash / Standard)
+static CRGB s_vuRingColor = CRGB(0, 180, 0);
+
 void ledComputeZonesFromPlages() {
   int plageTotale = ADC_PLAGE_MAX - ADC_PLAGE_MIN + 1;
   if (plageTotale < 1) plageTotale = 1;
@@ -82,12 +85,56 @@ void ledRenderVuMeter(float level) {
   for (int i = 0; i < LED_COUNT; i++) {
     g.leds[i] = (i < litCount) ? ledCouleurPourIndex(i) : CRGB::Black;
   }
-  FastLED.show();
-  yield();
+  s_vuRingColor = ledCouleurPourIndex(litCount - 1);
+  ledPresent();
 }
 
 void ledFillStrip(CRGB color) {
   fill_solid(g.leds, LED_COUNT, color);
+  ledPresent();
+}
+
+static CRGB ledRingColor() {
+  if (g.live.activeMode == MODE_MEDITATION) {
+    switch (g.med.phase) {
+      case MED_INSPIRE:
+        return CRGB(MEDIT_COLOR_IN_R, MEDIT_COLOR_IN_G, MEDIT_COLOR_IN_B);
+      case MED_HOLD:
+        return CRGB(MEDIT_COLOR_HOLD_R, MEDIT_COLOR_HOLD_G, MEDIT_COLOR_HOLD_B);
+      case MED_EXPIRE:
+        return CRGB(MEDIT_COLOR_OUT_R, MEDIT_COLOR_OUT_G, MEDIT_COLOR_OUT_B);
+      case MED_HOLD_EMPTY:
+        return CRGB(MEDIT_COLOR_EMPTY_R, MEDIT_COLOR_EMPTY_G, MEDIT_COLOR_EMPTY_B);
+      case MED_DONE:
+        return CRGB(MEDIT_COLOR_DONE_R, MEDIT_COLOR_DONE_G, MEDIT_COLOR_DONE_B);
+      case MED_COUNTDOWN:
+        return CRGB(80, 40, 120);
+      default:
+        return CRGB::Black;
+    }
+  }
+
+  if (g.live.activeMode == MODE_DEFI_FIFOU) {
+    switch (g.fifou.phase) {
+      case FIFOU_LOST: {
+        bool on = ((millis() / FIFOU_LOST_PULSE_PERIOD_MS) & 1) == 0;
+        return on ? CRGB::Red : CRGB::Black;
+      }
+      case FIFOU_WON:
+        return CRGB(255, 200, 0);
+      case FIFOU_PLAYING:
+      case FIFOU_COUNTDOWN:
+        return CRGB(FIFOU_COLOR_R, FIFOU_COLOR_G, FIFOU_COLOR_B);
+      default:
+        return CRGB::Black;
+    }
+  }
+
+  return s_vuRingColor;
+}
+
+void ledPresent() {
+  fill_solid(g.ring, RING_LED_COUNT, ledRingColor());
   FastLED.show();
   yield();
 }
@@ -101,7 +148,12 @@ void ledAfficherBleuComplet(uint16_t dureeMs) {
 }
 
 void ledInitHardware() {
-  FastLED.addLeds<WS2812, LED_PIN, GRB>(g.leds, LED_COUNT);
+  static bool ready = false;
+  if (!ready) {
+    FastLED.addLeds<WS2812, LED_PIN, GRB>(g.leds, LED_COUNT);
+    FastLED.addLeds<WS2812, RING_PIN, GRB>(g.ring, RING_LED_COUNT);
+    ready = true;
+  }
   FastLED.setBrightness(g.live.maxBrightness);
   FastLED.clear(true);
 }
