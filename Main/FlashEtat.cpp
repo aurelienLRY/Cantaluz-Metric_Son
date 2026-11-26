@@ -56,7 +56,7 @@ bool flashUpdateTransition() {
     ledFillStrip(CRGB::Blue);
   } else {
     fill_solid(g.leds, LED_COUNT, CRGB::Black);
-    FastLED.show();
+    ledPresent();
   }
 
   g.flashStep++;

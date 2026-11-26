@@ -4,6 +4,7 @@
  * Matériel :
  *   - Micro MAX4466 sur GPIO34 (ADC1), alim 3,3 V
  *   - Ruban WS2812B sur GPIO4, alim 5 V externe, GND commun
+ *   - Bandeau rond WS2812B sur GPIO16 (couleur du palier / de la phase)
  *   - Antenne U.FL branchée (obligatoire pour le Wi-Fi)
  *
  * À quoi sert ce fichier ?

@@ -78,8 +78,7 @@ static CRGB medColorForPhase(MedPhase phase) {
 
 static void medClearStrip() {
   fill_solid(g.leds, LED_COUNT, CRGB::Black);
-  FastLED.show();
-  yield();
+  ledPresent();
 }
 
 static void medComputePhaseBounds(MedPhase phase, int *outStart, int *outEnd, uint16_t *outMsPerLed) {
@@ -229,8 +228,7 @@ static void medRenderCountdown(unsigned long now) {
   for (int i = 0; i < LED_COUNT; i++) {
     g.leds[i] = (i < lit) ? c : CRGB::Black;
   }
-  FastLED.show();
-  yield();
+  ledPresent();
 }
 
 static void medPulseHoldSections(unsigned long now) {
@@ -279,8 +277,7 @@ static void medStepBreath(unsigned long now) {
 
   if (now < g.med.nextLedStepMs) {
     medPulseHoldSections(now);
-    FastLED.show();
-    yield();
+    ledPresent();
     return;
   }
 
@@ -292,8 +289,7 @@ static void medStepBreath(unsigned long now) {
   g.med.nextLedStepMs = now + g.med.msPerLed;
 
   medPulseHoldSections(now);
-  FastLED.show();
-  yield();
+  ledPresent();
 }
 
 void modeMeditationLoop() {

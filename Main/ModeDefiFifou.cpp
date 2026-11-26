@@ -48,8 +48,7 @@ static void fifouComputeRates() {
 
 static void fifouClearStrip() {
   fill_solid(g.leds, LED_COUNT, CRGB::Black);
-  FastLED.show();
-  yield();
+  ledPresent();
 }
 
 static void fifouRenderStrip() {
@@ -60,8 +59,7 @@ static void fifouRenderStrip() {
   for (int i = 0; i < LED_COUNT; i++) {
     g.leds[i] = (i < lit) ? FIFOU_COL : CRGB::Black;
   }
-  FastLED.show();
-  yield();
+  ledPresent();
 }
 
 static void fifouBeginSession(unsigned long now) {
@@ -105,8 +103,7 @@ static void fifouRenderLostPulse(unsigned long now) {
 
   bool on = ((now / FIFOU_LOST_PULSE_PERIOD_MS) & 1) == 0;
   fill_solid(g.leds, LED_COUNT, on ? CRGB::Red : CRGB::Black);
-  FastLED.show();
-  yield();
+  ledPresent();
 }
 
 static void fifouRenderFireworks(unsigned long now) {
@@ -142,8 +139,7 @@ static void fifouRenderFireworks(unsigned long now) {
     if (ri >= 0 && ri < LED_COUNT && ri != li) g.leds[ri] = c;
   }
 
-  FastLED.show();
-  yield();
+  ledPresent();
 }
 
 static void fifouRenderCountdown(unsigned long now) {
@@ -158,8 +154,7 @@ static void fifouRenderCountdown(unsigned long now) {
 
   bool on = ((now / period) & 1) == 0;
   fill_solid(g.leds, LED_COUNT, on ? FIFOU_COL : CRGB::Black);
-  FastLED.show();
-  yield();
+  ledPresent();
 }
 
 const char *defiFifouPhaseLabel(FifouPhase phase) {
